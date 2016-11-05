@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Md.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="HTMLTag.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

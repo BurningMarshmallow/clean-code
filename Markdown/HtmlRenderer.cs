@@ -1,5 +1,5 @@
-﻿using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Markdown
 {
@@ -17,35 +17,39 @@ namespace Markdown
             return input;
         }
 
-        private string Render(string input, string token, string tag, bool digitsNotAllowed=true)
+        private string Render(List<string> input, string tagName, bool digitsNotAllowed=true)
         {
-            if (digitsNotAllowed && IsOnlyDigitsInBody(input, token))
-                return input;
-            return Regex.Replace(input, $"{token}(.*){token}", $"<{tag}>$1</{tag}>");
+            if (digitsNotAllowed && IsOnlyDigitsInBody(input))
+                return string.Join("", input);
+            input[0] = $"<{tagName}>";
+            input[input.Count - 1] = $"</{tagName}>";
+            return string.Join("", input);
         }
 
-        public bool IsOnlyDigitsInBody(string input, string token)
+        public bool IsOnlyDigitsInBody(List<string> input)
         {
-            string regexp = $"{token}(.*){token}";
-            var data = Regex.Match(input, regexp);
-            if (data.Groups.Count == 2)
-                return data.Groups[1].Value.All(char.IsDigit);
-            return false;
+            var len = input.Count;
+            for (var i = 1; i < len - 1; i++)
+            {
+                if (!input[i].All(char.IsDigit))
+                    return false;
+            }
+            return true;
         }
 
-        public string RenderUnderscore(string input)
+        public string RenderUnderscore(List<string> input)
         {
-            return Render(input, "_", "em");
+            return Render(input, "em");
         }
 
-        public string RenderDoubleUnderscore(string input)
+        public string RenderDoubleUnderscore(List<string> input)
         {
-            return Render(input, "__", "strong");
+            return Render(input, "strong");
         }
 
-        public string RenderBacktick(string input)
+        public string RenderBacktick(List<string> input)
         {
-            return Render(input, "`", "code", false);
+            return Render(input, "code", false);
         }
     }
 }

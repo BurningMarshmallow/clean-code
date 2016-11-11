@@ -55,8 +55,8 @@ namespace Markdown
                             stack = StackAddRenderedTagBody(stack, "__", renderer.RenderDoubleUnderscore);
                         break;
                     case "`":
-                        var list = GetTagBody(ref stack, token);
-                        stack.Push(renderer.RenderBacktick(string.Join("", list)));
+                        var list = GetTagTokensList(ref stack, token);
+                        stack.Push(renderer.RenderBacktick(list));
                         break;
                     default:
                         continue;
@@ -74,10 +74,10 @@ namespace Markdown
             return codeTagsBeforeToken % 2 == 1 && isCodeAfterToken;
         }
 
-        private Stack<string> StackAddRenderedTagBody(Stack<string> stack, string tagName, Func<string, string> render)
+        private Stack<string> StackAddRenderedTagBody(Stack<string> stack, string tagName, Func<List<string>, string> render)
         {
-            var body = GetTagBody(ref stack, tagName);
-            stack.Push(render(body));
+            var tokens = GetTagTokensList(ref stack, tagName);
+            stack.Push(render(tokens));
             return stack;
         }
 
@@ -97,7 +97,7 @@ namespace Markdown
             return tags.Contains(token);
         }
 
-        public string GetTagBody(ref Stack<string> stack, string tagName)
+        public List<string> GetTagTokensList(ref Stack<string> stack, string tagName)
         {
             var tokens = new List<string> { tagName };
             while (stack.Peek() != tagName)
@@ -106,7 +106,7 @@ namespace Markdown
             tokens.Add(stack.Pop());
             tokens.Reverse();
 
-            return string.Join("", tokens);
+            return tokens;
         }
 
         public string RemoveSlashes(string text)

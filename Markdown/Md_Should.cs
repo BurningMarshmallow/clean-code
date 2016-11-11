@@ -62,5 +62,37 @@ namespace Markdown
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
+        [TestCase("`_inactive_`", ExpectedResult = "<p><code>_inactive_</code></p>")]
+        [TestCase("`it is_passive_word`", ExpectedResult = "<p><code>it is_passive_word</code></p>")]
+        public string parseSingleUnderscoresInsideCode_asJustCode(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("some_text_`", ExpectedResult = "<p>some<em>text</em>`</p>")]
+        [TestCase("`before_inside_", ExpectedResult = "<p>`before<em>inside</em></p>")]
+        public string parseSingleUnderscoresInsideUnpairedCode_asStrong(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+
+        [TestCase("`I__am__ inside code`", ExpectedResult = "<p><code>I__am__ inside code</code></p>")]
+        [TestCase("`__inside__`", ExpectedResult = "<p><code>__inside__</code></p>")]
+        public string parseDoubleUnderscoresInsideCode_asJustCode(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("__test__`abc", ExpectedResult = "<p><strong>test</strong>`abc</p>")]
+        [TestCase("`__inside__", ExpectedResult = "<p>`<strong>inside</strong></p>")]
+        public string parseDoubleUnderscoresInsideUnpairedCode_asStrong(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
     }
 }

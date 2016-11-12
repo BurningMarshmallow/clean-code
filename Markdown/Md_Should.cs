@@ -108,22 +108,26 @@ namespace Markdown
             return rendered;
         }
 
-        public void Performance_Test()
+        [Test]
+        public void TestPerformance()
         {
-            var builder = new StringBuilder();
-            var test = "_x_ ";
-            for (var i = 0; i < 1000; i++)
-                builder.Append(test);
-            var text = builder.ToString();
-            var sw = Stopwatch.StartNew();
-            foreach (var symbol in text)
-            {
-            }
-            var linearTime = sw.Elapsed;
-            sw.Restart();
+            const string data = " _A_ __B__ _C_ `_D_`";
+            var firstText = data.RepeatString(100);
+            var secondText = data.RepeatString(500);
+
+            var firstTime = GetRenderingTime(firstText);
+            var secondTime = GetRenderingTime(secondText);
+
+            Assert.IsTrue(secondTime / firstTime <= 6);
+        }
+
+        private long GetRenderingTime(string text)
+        {
+            var watch = new Stopwatch();
+            watch.Start();
             mdProcessor.RenderToHtml(text);
-            var resultTime = sw.Elapsed;
-            Assert.AreEqual(linearTime, resultTime);
+            watch.Stop();
+            return watch.ElapsedMilliseconds;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
 using NUnit.Framework;
 
@@ -108,17 +109,21 @@ namespace Markdown
             return rendered;
         }
 
-        [Test]
-        public void TestPerformance()
+        [TestCase(100, 500)]
+        [TestCase(39, 120)]
+        [TestCase(50, 600)]
+        public void TestPerformance(int firstLen, int secondLen)
         {
             const string data = " _A_ __B__ _C_ `_D_`";
-            var firstText = data.RepeatString(100);
-            var secondText = data.RepeatString(500);
+            var firstText = data.RepeatString(firstLen);
+            var secondText = data.RepeatString(secondLen);
 
             var firstTime = GetRenderingTime(firstText);
             var secondTime = GetRenderingTime(secondText);
 
-            Assert.IsTrue(secondTime / firstTime <= 6);
+            var factor = secondLen / firstLen;
+
+            Assert.IsTrue(secondTime / firstTime <= 7 * factor);
         }
 
         private long GetRenderingTime(string text)

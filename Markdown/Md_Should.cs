@@ -148,12 +148,16 @@ namespace Markdown
             var text = builder.ToString();
             var sw = Stopwatch.StartNew();
             var tmp = 0;
-            var sb = new StringBuilder();
             foreach (var symbol in text)
             {
                 for (int i = 0; i < 1000; i++)
                     tmp++;
             }
+
+            mdProcessor.RenderToHtml(text);
+            mdProcessor.RenderToHtml(text);
+            mdProcessor.RenderToHtml(text);
+
 
             var linearTime = sw.ElapsedMilliseconds;
             sw.Restart();

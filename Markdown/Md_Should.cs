@@ -97,16 +97,16 @@ namespace Markdown
             return rendered;
         }
 
-        //[TestCase("_ d_", ExpectedResult = "_ d_")]
-        //[TestCase("_a _", ExpectedResult = "_a _")]
-        //[TestCase("__ d__", ExpectedResult = "__ d__")]
-        //[TestCase("__a __", ExpectedResult = "__a __")]
-        //[TestCase("_ abc_abc_", ExpectedResult = "_ abc<em>abc</em>")]
-        //public string UnworkingTags(string text)
-        //{
-        //    var rendered = mdProcessor.RenderToHtml(text);
-        //    return rendered;
-        //}
+        [TestCase("_ d_", ExpectedResult = "<p>_ d_</p>")]
+        [TestCase("_a _", ExpectedResult = "<p>_a _</p>")]
+        [TestCase("__ d__", ExpectedResult = "<p>__ d__</p>")]
+        [TestCase("__a __", ExpectedResult = "<p>__a __</p>")]
+        [TestCase("_ abc_abc_", ExpectedResult = "<p>_ abc<em>abc</em></p>")]
+        public string UnworkingTags(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
 
         public void Performance_Test()
         {

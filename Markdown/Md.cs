@@ -33,6 +33,8 @@ namespace Markdown
             var tokenIndex = 0;
             var lastCodeIndex = GetLastCodeIndex(tokens);
             var insideCode = false;
+            var biasStrong = 1;
+            var biasEm = 1;
             foreach (var token in tokens)
             {
                 tokenIndex++;
@@ -40,21 +42,42 @@ namespace Markdown
                 {
                     insideCode = !insideCode && (tokenIndex < lastCodeIndex);
                 }
-                if (AddToStack(stack, token))
+                if (IsEscapedOrNotTag(stack, token))
                 {
+                    stack.Push(token);
+                    continue;
+                }
+                if (IsTag(token) && !stack.Contains(token))
+                {
+                    var bias = token == "_" ? biasEm : token == "__" ? biasStrong : -1;
+                    if (IsIncorrectSurrounding(tokens, bias, tokenIndex - 1))
+                    {
+                        stack.Push("\\" + token);
+                        continue;
+                    }
+                    if (token == "_")
+                    {
+                        biasEm = -biasEm;
+                    }
+
+                    if (token == "__")
+                    {
+                        biasStrong = -biasStrong;                        
+                    }
+
                     stack.Push(token);
                     continue;
                 }
                 switch (token)
                 {
                     case "_":
-                        if (insideCode)
+                        if (insideCode || IsIncorrectSurrounding(tokens, biasEm, tokenIndex - 1))
                             stack.Push("_");
                         else
                             stack = StackAddRenderedTagBody(stack, "_", renderer.RenderUnderscore);
                         break;
                     case "__":
-                        if (insideCode)
+                        if (insideCode || IsIncorrectSurrounding(tokens, biasStrong, tokenIndex - 1))
                             stack.Push("__");
                         else
                             stack = StackAddRenderedTagBody(stack, "__", renderer.RenderDoubleUnderscore);
@@ -68,6 +91,13 @@ namespace Markdown
                 }
             }
             return string.Join("", stack.Reverse());
+        }
+
+        private static bool IsIncorrectSurrounding(IReadOnlyList<string> tokens, int bias, int tokenIndex)
+        {
+            if (tokenIndex + bias >= tokens.Count || tokenIndex + bias < 0)
+                return false;
+            return bias == -1 ? tokens[tokenIndex + bias].EndsWith(" ") : tokens[tokenIndex + bias].StartsWith(" ");
         }
 
         private static int GetLastCodeIndex(IReadOnlyList<string> tokens)
@@ -88,11 +118,10 @@ namespace Markdown
             return stack;
         }
 
-        private static bool AddToStack(Stack<string> stack, string token)
+        private static bool IsEscapedOrNotTag(Stack<string> stack, string token)
         {
-            return (stack.Count != 0 && Escapes.Contains(stack.Peek()))
-                || !IsTag(token)
-                || (IsTag(token) && !stack.Contains(token));
+            return stack.Count != 0 && Escapes.Contains(stack.Peek())
+                   || !IsTag(token) ;
         }
 
         private static bool IsTag(string token)

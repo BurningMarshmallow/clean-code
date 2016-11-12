@@ -5,29 +5,30 @@ using System.Text;
 
 namespace Markdown
 {
-	public class Md
-	{
+    public class Md
+    {
         private readonly HtmlRenderer renderer;
+        private readonly Tokenizer tokenizer;
+        private static readonly List<string> TagNames = new List<string> {"__", "_", "`" };
+        private static readonly List<string> Escapes = new List<string> { "\\" };
 
         public Md()
         {
             renderer = new HtmlRenderer();
+            var tagNamesAndEscape = TagNames.Concat(Escapes);
+            tokenizer = new Tokenizer(tagNamesAndEscape.ToArray());
         }
 
         public string RenderToHtml(string markdown)
         {
-            var converted = ConvertText(markdown);
-            return renderer.RenderToParagraph(converted);
+            var result = renderer.RenderLessOrGreater(markdown);
+            var tokens = tokenizer.GetTokens(result);
+            var renderedTokens = RenderTokens(tokens);
+            var unescaped = Unescape(renderedTokens);
+            return $"<p>{unescaped}</p>";
         }
 
-        public string ConvertText(string text)
-        {
-            text = renderer.RenderCompare(text);
-            var tokens = GetTokens(text);
-            return RemoveSlashes(GetRenderedText(tokens));
-        }
-
-        private string GetRenderedText(IReadOnlyList<string> tokens)
+        private string RenderTokens(IReadOnlyList<string> tokens)
         {
             var stack = new Stack<string>();
             var tokenIndex = 0;
@@ -49,7 +50,7 @@ namespace Markdown
                             stack = StackAddRenderedTagBody(stack, "_", renderer.RenderUnderscore);
                         break;
                     case "__":
-                        if (IsTokenInsideCode(tokens.ToList(), tokenIndex - 1))
+                        if (IsTokenInsideCode(tokens, tokenIndex - 1))
                             stack.Push("__");
                         else
                             stack = StackAddRenderedTagBody(stack, "__", renderer.RenderDoubleUnderscore);
@@ -83,18 +84,14 @@ namespace Markdown
 
         private static bool AddToStack(Stack<string> stack, string token)
         {
-            return (stack.Count != 0 && stack.Peek() == "\\")
+            return (stack.Count != 0 && Escapes.Contains(stack.Peek()))
                 || !IsTag(token)
                 || (IsTag(token) && !stack.Contains(token));
         }
 
         private static bool IsTag(string token)
         {
-            var tags = new HashSet<string>()
-            {
-                "_", "__", "`"
-            };
-            return tags.Contains(token);
+            return TagNames.Contains(token);
         }
 
         public List<string> GetTagTokensList(ref Stack<string> stack, string tagName)
@@ -109,48 +106,17 @@ namespace Markdown
             return tokens;
         }
 
-        public string RemoveSlashes(string text)
+        public string Unescape(string text)
         {
-            text = text.Replace("\\_", "_")
-                       .Replace("\\`", "`")
-                       .Replace("\\__", "__");
+            foreach (var tagName in TagNames)
+            {
+                // ReSharper disable once LoopCanBeConvertedToQuery
+                foreach (var escapeSymbol in Escapes)
+                {
+                    text = text.Replace(escapeSymbol + tagName, tagName);
+                }
+            }
             return text;
         }
-
-        public List<string> GetTokens(string text)
-        {
-            return SplitWithDelimiters(text, new[] { "__", "_", "\\", "`" })
-                       .Where(s => s != "")
-                       .ToList(); ;
-        }
-
-	    public List<string> SplitWithDelimiters(string text, string[] delimiters)
-	    {
-	        var splitted = new List<string>();
-            var sb = new StringBuilder();
-	        var textLen = text.Length;
-	        var i = 0;
-            while (i < textLen)
-            {
-                var isDelim = false;
-	            foreach (var delim in delimiters)
-	            {
-	                if (i + delim.Length > textLen || text.Substring(i, delim.Length) != delim) continue;
-	                splitted.Add(sb.ToString());
-	                splitted.Add(delim);
-	                sb.Clear();
-	                isDelim = true;
-	                i += delim.Length;
-	                break;
-	            }
-                if (isDelim) continue;
-                sb.Append(text[i]);
-                i++;
-            }
-	        if (sb.Length > 0)
-	            splitted.Add(sb.ToString());
-            return splitted;
-	    }
     }
 }
-

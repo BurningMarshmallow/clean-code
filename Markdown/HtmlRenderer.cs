@@ -5,12 +5,7 @@ namespace Markdown
 {
     public class HtmlRenderer
     {
-        public string RenderToParagraph(string input)
-        {
-            return $"<p>{input}</p>";
-        }
-
-        public string RenderCompare(string input)
+        public string RenderLessOrGreater(string input)
         {
             input = input.Replace("\\<", "&lt;")
                          .Replace("\\>", "&gt;");

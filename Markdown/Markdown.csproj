@@ -51,6 +51,8 @@
     <Compile Include="Md.cs" />
     <Compile Include="Md_Should.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="StringExtensions.cs" />
+    <Compile Include="Tokenizer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

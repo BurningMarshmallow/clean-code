@@ -112,6 +112,8 @@ namespace Markdown
         [TestCase(100, 500)]
         [TestCase(39, 120)]
         [TestCase(50, 600)]
+        [TestCase(200, 2000)]
+        [TestCase(1000, 10000)]
         public void TestPerformance(int firstLen, int secondLen)
         {
             const string data = " _A_ __B__ _C_ `_D_`";
@@ -133,6 +135,31 @@ namespace Markdown
             mdProcessor.RenderToHtml(text);
             watch.Stop();
             return watch.ElapsedMilliseconds;
+        }
+
+        [TestCase(3000)]
+        [TestCase(4000)]
+        public void TestPerformanceComparedToActivity(int numberOfTimes)
+        {
+            var builder = new StringBuilder();
+            var test = "_ABA_ __CCCC__ _D_ _R_";
+            for (var i = 0; i < numberOfTimes; i++)
+                builder.Append(test);
+            var text = builder.ToString();
+            var sw = Stopwatch.StartNew();
+            var tmp = 0;
+            var sb = new StringBuilder();
+            foreach (var symbol in text)
+            {
+                for (int i = 0; i < 1000; i++)
+                    tmp++;
+            }
+
+            var linearTime = sw.ElapsedMilliseconds;
+            sw.Restart();
+            mdProcessor.RenderToHtml(text);
+            var resultTime = sw.ElapsedMilliseconds;
+            Assert.LessOrEqual(resultTime / linearTime, 20);
         }
     }
 }

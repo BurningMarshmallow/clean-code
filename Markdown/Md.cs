@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Markdown
 {
@@ -32,10 +31,15 @@ namespace Markdown
         {
             var stack = new Stack<string>();
             var tokenIndex = 0;
-
+            var lastCodeIndex = GetLastCodeIndex(tokens);
+            var insideCode = false;
             foreach (var token in tokens)
             {
                 tokenIndex++;
+                if (token == "`")
+                {
+                    insideCode = !insideCode && (tokenIndex < lastCodeIndex);
+                }
                 if (AddToStack(stack, token))
                 {
                     stack.Push(token);
@@ -44,13 +48,13 @@ namespace Markdown
                 switch (token)
                 {
                     case "_":
-                        if (IsTokenInsideCode(tokens, tokenIndex - 1))
+                        if (insideCode)
                             stack.Push("_");
                         else
                             stack = StackAddRenderedTagBody(stack, "_", renderer.RenderUnderscore);
                         break;
                     case "__":
-                        if (IsTokenInsideCode(tokens, tokenIndex - 1))
+                        if (insideCode)
                             stack.Push("__");
                         else
                             stack = StackAddRenderedTagBody(stack, "__", renderer.RenderDoubleUnderscore);
@@ -66,13 +70,15 @@ namespace Markdown
             return string.Join("", stack.Reverse());
         }
 
-        private static bool IsTokenInsideCode(IReadOnlyList<string> tokens, int tokenIndex)
+        private static int GetLastCodeIndex(IReadOnlyList<string> tokens)
         {
-            var codeTagsBeforeToken = tokens.Take(tokenIndex)
-                                            .Count(t => t == "`");
-            var isCodeAfterToken = tokens.Skip(tokenIndex)
-                                         .Contains("`");
-            return codeTagsBeforeToken % 2 == 1 && isCodeAfterToken;
+            var lastCodeIndex = -1;
+            for (var i = 0; i < tokens.Count; i++)
+            {
+                if (tokens[i] == "`")
+                    lastCodeIndex = i;
+            }
+            return lastCodeIndex;
         }
 
         private Stack<string> StackAddRenderedTagBody(Stack<string> stack, string tagName, Func<List<string>, string> render)

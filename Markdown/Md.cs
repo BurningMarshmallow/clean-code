@@ -8,7 +8,15 @@ namespace Markdown
     {
         private readonly HtmlRenderer renderer;
         private readonly Tokenizer tokenizer;
-        private static readonly List<string> TagNames = new List<string> {"__", "_", "`" };
+        private static readonly List<Tag> Tags = new List<Tag>
+        {
+            new Tag("__", "strong"),
+            new Tag("*", "strong"),
+            new Tag("_", "em"),
+            new Tag("`", "code", 0, false)
+        };
+
+        private static readonly List<string> TagNames = Tags.Select(tag => tag.TagValue).ToList();
         private static readonly List<string> Escapes = new List<string> { "\\" };
 
         public Md()
@@ -27,106 +35,103 @@ namespace Markdown
             return $"<p>{unescaped}</p>";
         }
 
-        private string RenderTokens(IReadOnlyList<string> tokens)
+        private string RenderTokens(IReadOnlyList<Token> tokens)
         {
             var stack = new Stack<string>();
+            var tags = new Stack<Tag>();
             var tokenIndex = 0;
             var lastCodeIndex = GetLastCodeIndex(tokens);
             var insideCode = false;
-            var biasStrong = 1;
-            var biasEm = 1;
             foreach (var token in tokens)
             {
                 tokenIndex++;
-                if (token == "`")
+                var curTag = Tags.FirstOrDefault(tag => tag.TagValue == token.TokenValue);
+
+                if (curTag == null || IsEscaped(stack))
+                {
+                    stack.Push(token.TokenValue);
+                    continue;
+                }
+
+                var tagValue = curTag.TagValue;
+                if (tagValue == "`")
                 {
                     insideCode = !insideCode && (tokenIndex < lastCodeIndex);
                 }
-                if (IsEscapedOrNotTag(stack, token))
+                var lastBias = GetLastBias(tags, curTag);
+
+                if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex - 1) || DisabledByCodeTag(tagValue, insideCode))
                 {
-                    stack.Push(token);
+                    stack.Push("\\" + tagValue);
                     continue;
                 }
-                if (IsTag(token) && !stack.Contains(token))
+                if (lastBias != 0)
+                    curTag.Bias = -lastBias;
+
+                tags = AddTagToTags(tags, curTag);
+                if (!stack.Contains(tagValue))
                 {
-                    var bias = token == "_" ? biasEm : token == "__" ? biasStrong : -1;
-                    if (IsIncorrectSurrounding(tokens, bias, tokenIndex - 1))
-                    {
-                        stack.Push("\\" + token);
-                        continue;
-                    }
-                    if (token == "_")
-                    {
-                        biasEm = -biasEm;
-                    }
-
-                    if (token == "__")
-                    {
-                        biasStrong = -biasStrong;                        
-                    }
-
-                    stack.Push(token);
-                    continue;
+                    stack.Push(tagValue);
                 }
-                switch (token)
+                else
                 {
-                    case "_":
-                        if (insideCode || IsIncorrectSurrounding(tokens, biasEm, tokenIndex - 1))
-                            stack.Push("_");
-                        else
-                            stack = StackAddRenderedTagBody(stack, "_", renderer.RenderUnderscore);
-                        break;
-                    case "__":
-                        if (insideCode || IsIncorrectSurrounding(tokens, biasStrong, tokenIndex - 1))
-                            stack.Push("__");
-                        else
-                            stack = StackAddRenderedTagBody(stack, "__", renderer.RenderDoubleUnderscore);
-                        break;
-                    case "`":
-                        var list = GetTagTokensList(ref stack, token);
-                        stack.Push(renderer.RenderBacktick(list));
-                        break;
-                    default:
-                        continue;
+                    stack = StackAddRenderedTagBody(stack, curTag);
                 }
             }
             return string.Join("", stack.Reverse());
         }
 
-        private static bool IsIncorrectSurrounding(IReadOnlyList<string> tokens, int bias, int tokenIndex)
+        private static Stack<Tag> AddTagToTags(Stack<Tag> tags, Tag curTag)
         {
-            if (tokenIndex + bias >= tokens.Count || tokenIndex + bias < 0)
-                return false;
-            return bias == -1 ? tokens[tokenIndex + bias].EndsWith(" ") : tokens[tokenIndex + bias].StartsWith(" ");
+            if (tags.Count != 0 && tags.Peek().TagValue == curTag.TagValue)
+                tags.Pop();
+
+            tags.Push(curTag);
+            return tags;
         }
 
-        private static int GetLastCodeIndex(IReadOnlyList<string> tokens)
+        private static int GetLastBias(Stack<Tag> tags, Tag curTag)
+        {
+            if (tags.Count == 0)
+                return 1;
+            var lastTag = tags.Peek();
+            return lastTag.TagValue != curTag.TagValue ? 0 : lastTag.Bias;
+        }
+
+        private static bool DisabledByCodeTag(string tagValue, bool insideCode)
+        {
+            return tagValue != "`" && insideCode;
+        }
+
+        private static bool IsEscaped(Stack<string> stack)
+        {
+            return stack.Count != 0 && Escapes.Contains(stack.Peek());
+        }
+
+        private static bool IsIncorrectSurrounding(IReadOnlyList<Token> tokens, int bias, int tokenIndex)
+        {
+            if (tokenIndex + bias >= tokens.Count || tokenIndex + bias < 0 || bias == 0)
+                return false;
+            return bias == -1 ? tokens[tokenIndex + bias].TokenValue.EndsWith(" ")
+                : tokens[tokenIndex + bias].TokenValue.StartsWith(" ");
+        }
+
+        private static int GetLastCodeIndex(IReadOnlyList<Token> tokens)
         {
             var lastCodeIndex = -1;
             for (var i = 0; i < tokens.Count; i++)
             {
-                if (tokens[i] == "`")
+                if (tokens[i].TokenValue == "`")
                     lastCodeIndex = i;
             }
             return lastCodeIndex;
         }
-
-        private Stack<string> StackAddRenderedTagBody(Stack<string> stack, string tagName, Func<List<string>, string> render)
+        
+        private Stack<string> StackAddRenderedTagBody(Stack<string> stack, Tag tag)
         {
-            var tokens = GetTagTokensList(ref stack, tagName);
-            stack.Push(render(tokens));
+            var tokens = GetTagTokensList(ref stack, tag.TagValue);
+            stack.Push(renderer.Render(tokens, tag, tag.DigitsNotAllowed));
             return stack;
-        }
-
-        private static bool IsEscapedOrNotTag(Stack<string> stack, string token)
-        {
-            return stack.Count != 0 && Escapes.Contains(stack.Peek())
-                   || !IsTag(token) ;
-        }
-
-        private static bool IsTag(string token)
-        {
-            return TagNames.Contains(token);
         }
 
         public List<string> GetTagTokensList(ref Stack<string> stack, string tagName)

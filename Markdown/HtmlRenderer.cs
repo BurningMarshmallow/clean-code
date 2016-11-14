@@ -12,8 +12,9 @@ namespace Markdown
             return input;
         }
 
-        private string Render(List<string> input, string tagName, bool digitsNotAllowed=true)
+        public string Render(List<string> input, Tag tag, bool digitsNotAllowed=true)
         {
+            var tagName = tag.TagRepresentation;
             if (digitsNotAllowed && IsOnlyDigitsInBody(input))
                 return string.Join("", input);
             input[0] = $"<{tagName}>";
@@ -32,19 +33,19 @@ namespace Markdown
             return true;
         }
 
-        public string RenderUnderscore(List<string> input)
-        {
-            return Render(input, "em");
-        }
+        //public string RenderUnderscore(List<string> input)
+        //{
+        //    return Render(input, "em");
+        //}
 
-        public string RenderDoubleUnderscore(List<string> input)
-        {
-            return Render(input, "strong");
-        }
+        //public string RenderDoubleUnderscore(List<string> input)
+        //{
+        //    return Render(input, "strong");
+        //}
 
-        public string RenderBacktick(List<string> input)
-        {
-            return Render(input, "code", false);
-        }
+        //public string RenderBacktick(List<string> input)
+        //{
+        //    return Render(input, "code", false);
+        //}
     }
 }

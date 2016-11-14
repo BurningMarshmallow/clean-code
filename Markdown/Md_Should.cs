@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using NUnit.Framework;
 
@@ -13,6 +12,14 @@ namespace Markdown
         [TestCase("iamatest.STUB", ExpectedResult = "<p>iamatest.STUB</p>")]
         [TestCase("bla-bla-bla", ExpectedResult = "<p>bla-bla-bla</p>")]
         public string ParseSimpleText_AsParagraph(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("BE*SES*EB", ExpectedResult = "<p>BE<strong>SES</strong>EB</p>")]
+        [TestCase("*AAA*", ExpectedResult = "<p><strong>AAA</strong></p>")]
+        public string ParseStars_ToStrongTags(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;

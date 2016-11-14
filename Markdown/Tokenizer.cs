@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Markdown
@@ -12,9 +13,22 @@ namespace Markdown
             this.delimiters = delimiters;
         }
 
-        public List<string> GetTokens(string text)
+        public List<Token> GetTokens(string text)
         {
-            return SplitWithDelimiters(text, delimiters);
+            var tokens = new List<Token>();
+            var splitted = SplitWithDelimiters(text, delimiters);
+            foreach (var split in splitted)
+            {
+                if (split == "\\")
+                {
+                    tokens.Add(new Token("escape", split));
+                }
+                else
+                {
+                    tokens.Add(delimiters.Contains(split) ? new Token("tag", split) : new Token("raw", split));
+                }
+            }
+            return tokens;
         }
 
         public List<string> SplitWithDelimiters(string text, string[] delims)

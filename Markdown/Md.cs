@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Markdown
@@ -68,7 +67,7 @@ namespace Markdown
                 if (lastBias != 0)
                     currentTag.Bias = -lastBias;
 
-                tags = AddTagToTags(tags, currentTag);
+                tags = UpdateTagsWithCurrentTag(tags, currentTag);
                 if (!stack.Contains(tagValue))
                 {
                     stack.Push(tagValue);
@@ -81,21 +80,21 @@ namespace Markdown
             return string.Join("", stack.Reverse());
         }
 
-        private static Stack<Tag> AddTagToTags(Stack<Tag> tags, Tag curTag)
+        private static Stack<Tag> UpdateTagsWithCurrentTag(Stack<Tag> tags, Tag currentTag)
         {
-            if (tags.Count != 0 && tags.Peek().TagValue == curTag.TagValue)
+            if (tags.Count != 0 && tags.Peek().TagValue == currentTag.TagValue)
                 tags.Pop();
 
-            tags.Push(curTag);
+            tags.Push(currentTag);
             return tags;
         }
 
-        private static int GetLastBias(Stack<Tag> tags, Tag curTag)
+        private static int GetLastBias(Stack<Tag> tags, Tag currentTag)
         {
             if (tags.Count == 0)
                 return 1;
             var lastTag = tags.Peek();
-            return lastTag.TagValue != curTag.TagValue ? 0 : lastTag.Bias;
+            return lastTag.TagValue != currentTag.TagValue ? 0 : lastTag.Bias;
         }
 
         private static bool DisabledByCodeTag(string tagValue, bool insideCode)
@@ -129,12 +128,12 @@ namespace Markdown
         
         private Stack<string> AddRenderedTagBody(Stack<string> stack, Tag tag)
         {
-            var tokens = GetTagTokensList(ref stack, tag.TagValue);
+            var tokens = GetTagTokensList(stack, tag.TagValue);
             stack.Push(renderer.Render(tokens, tag, tag.DigitsNotAllowed));
             return stack;
         }
 
-        public List<string> GetTagTokensList(ref Stack<string> stack, string tagName)
+        public List<string> GetTagTokensList(Stack<string> stack, string tagName)
         {
             var tokens = new List<string> { tagName };
             while (stack.Peek() != tagName)

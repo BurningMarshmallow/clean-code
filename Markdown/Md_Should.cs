@@ -132,7 +132,7 @@ namespace Markdown
 
             var factor = secondLen / firstLen;
 
-            Assert.IsTrue(secondTime / firstTime <= 7 * factor);
+            Assert.IsTrue(secondTime / firstTime <= 8 * factor);
         }
 
         private long GetRenderingTime(string text)

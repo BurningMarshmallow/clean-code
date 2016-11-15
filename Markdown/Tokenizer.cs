@@ -38,13 +38,13 @@ namespace Markdown
             var i = 0;
             while (i < textLen)
             {
-                var token = ReadNextToken(text, delimiters, i, ref splitted);
+                var token = ReadNextToken(text, delimiters, i, splitted);
                 i += token.Length;
             }
             return splitted;
         }
 
-        public string ReadNextToken(string text, string[] delims, int pos, ref List<string> splitted)
+        public string ReadNextToken(string text, string[] delims, int pos, List<string> splitted)
         {
             var token = new StringBuilder();
             while (pos < text.Length)

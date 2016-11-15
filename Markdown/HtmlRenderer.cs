@@ -32,20 +32,5 @@ namespace Markdown
             }
             return true;
         }
-
-        //public string RenderUnderscore(List<string> input)
-        //{
-        //    return Render(input, "em");
-        //}
-
-        //public string RenderDoubleUnderscore(List<string> input)
-        //{
-        //    return Render(input, "strong");
-        //}
-
-        //public string RenderBacktick(List<string> input)
-        //{
-        //    return Render(input, "code", false);
-        //}
     }
 }

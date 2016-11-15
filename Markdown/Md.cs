@@ -45,20 +45,20 @@ namespace Markdown
             foreach (var token in tokens)
             {
                 tokenIndex++;
-                var curTag = Tags.FirstOrDefault(tag => tag.TagValue == token.TokenValue);
+                var currentTag = Tags.FirstOrDefault(tag => tag.TagValue == token.TokenValue);
 
-                if (curTag == null || IsEscaped(stack))
+                if (currentTag == null || IsEscaped(stack))
                 {
                     stack.Push(token.TokenValue);
                     continue;
                 }
 
-                var tagValue = curTag.TagValue;
+                var tagValue = currentTag.TagValue;
                 if (tagValue == "`")
                 {
                     insideCode = !insideCode && (tokenIndex < lastCodeIndex);
                 }
-                var lastBias = GetLastBias(tags, curTag);
+                var lastBias = GetLastBias(tags, currentTag);
 
                 if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex - 1) || DisabledByCodeTag(tagValue, insideCode))
                 {
@@ -66,16 +66,16 @@ namespace Markdown
                     continue;
                 }
                 if (lastBias != 0)
-                    curTag.Bias = -lastBias;
+                    currentTag.Bias = -lastBias;
 
-                tags = AddTagToTags(tags, curTag);
+                tags = AddTagToTags(tags, currentTag);
                 if (!stack.Contains(tagValue))
                 {
                     stack.Push(tagValue);
                 }
                 else
                 {
-                    stack = StackAddRenderedTagBody(stack, curTag);
+                    stack = AddRenderedTagBody(stack, currentTag);
                 }
             }
             return string.Join("", stack.Reverse());
@@ -127,7 +127,7 @@ namespace Markdown
             return lastCodeIndex;
         }
         
-        private Stack<string> StackAddRenderedTagBody(Stack<string> stack, Tag tag)
+        private Stack<string> AddRenderedTagBody(Stack<string> stack, Tag tag)
         {
             var tokens = GetTagTokensList(ref stack, tag.TagValue);
             stack.Push(renderer.Render(tokens, tag, tag.DigitsNotAllowed));

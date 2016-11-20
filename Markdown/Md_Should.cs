@@ -9,17 +9,30 @@ namespace Markdown
     {
         private readonly Md mdProcessor = new Md();
 
-        [TestCase("iamatest.STUB", ExpectedResult = "<p>iamatest.STUB</p>")]
-        [TestCase("bla-bla-bla", ExpectedResult = "<p>bla-bla-bla</p>")]
-        public string ParseSimpleText_AsParagraph(string text)
+        [TestCase("This is [an example](http://example.com/) inline link.",
+            ExpectedResult = "<p>This is <a href=\"http://example.com/\">an example</a> inline link.</p>")]
+        [TestCase("[Google](http://google.com/)",
+            ExpectedResult = "<p><a href=\"http://google.com/\">Google</a></p>")]
+        public string ParseLink_AsHref(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
 
-        [TestCase("BE*SES*EB", ExpectedResult = "<p>BE<strong>SES</strong>EB</p>")]
-        [TestCase("*AAA*", ExpectedResult = "<p><strong>AAA</strong></p>")]
-        public string ParseStars_ToStrongTags(string text)
+        [TestCase("[Random text](/random/189888abc) seems quite interesting!",
+         ExpectedResult = "<p><a href=\"http://example.com/random/189888abc\">Random text</a> seems quite interesting!</p>")]
+        [TestCase("See my [About](/about/) page for details.",
+         ExpectedResult = "<p>See my <a href=\"http://example.com/about/\">About</a> page for details.</p>")]
+        public string ParseRelativeLink_AsHref(string text)
+        {
+            var mdProcessorWithBaseUrl = new Md("http://example.com");
+            var rendered = mdProcessorWithBaseUrl.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("iamatest.STUB", ExpectedResult = "<p>iamatest.STUB</p>")]
+        [TestCase("bla-bla-bla", ExpectedResult = "<p>bla-bla-bla</p>")]
+        public string ParseSimpleText_AsParagraph(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;

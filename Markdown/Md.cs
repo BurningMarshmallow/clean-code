@@ -10,19 +10,26 @@ namespace Markdown
         private static readonly List<Tag> Tags = new List<Tag>
         {
             new Tag("__", "strong"),
-            new Tag("*", "strong"),
             new Tag("_", "em"),
             new Tag("`", "code", 0, false)
         };
 
         private static readonly List<string> TagNames = Tags.Select(tag => tag.TagValue).ToList();
-        private static readonly List<string> Escapes = new List<string> { "\\" };
 
         public Md()
         {
             renderer = new HtmlRenderer();
-            var tagNamesAndEscape = TagNames.Concat(Escapes);
-            tokenizer = new Tokenizer(tagNamesAndEscape.ToArray());
+            var escapeAndBrackets = new[] {"\\", "[", "]", "(", ")"};
+            var tagNamesAndEscapeAndBrackets = TagNames.Concat(escapeAndBrackets);
+            tokenizer = new Tokenizer(tagNamesAndEscapeAndBrackets.ToArray());
+        }
+
+        public Md(string baseUrl)
+        {
+            renderer = new HtmlRenderer(baseUrl);
+            var escapeAndBrackets = new[] { "\\", "[", "]", "(", ")" };
+            var tagNamesAndEscapeAndBrackets = TagNames.Concat(escapeAndBrackets);
+            tokenizer = new Tokenizer(tagNamesAndEscapeAndBrackets.ToArray());
         }
 
         public string RenderToHtml(string markdown)
@@ -34,21 +41,27 @@ namespace Markdown
             return $"<p>{unescaped}</p>";
         }
 
-        private string RenderTokens(IReadOnlyList<Token> tokens)
+        private string RenderTokens(List<string> tokens)
         {
-            var stack = new Stack<string>();
+            var renderedTokens = new Stack<string>();
             var tags = new Stack<Tag>();
-            var tokenIndex = 0;
+            var tokensLength = tokens.Count;
             var lastCodeIndex = GetLastCodeIndex(tokens);
             var insideCode = false;
-            foreach (var token in tokens)
+            for (var tokenIndex = 0; tokenIndex < tokensLength; tokenIndex++)
             {
-                tokenIndex++;
-                var currentTag = Tags.FirstOrDefault(tag => tag.TagValue == token.TokenValue);
-
-                if (currentTag == null || IsEscaped(stack))
+                if (IsLink(tokens, tokenIndex))
                 {
-                    stack.Push(token.TokenValue);
+                    renderedTokens.Push(renderer.RenderLink(tokens, tokenIndex));
+                    tokenIndex += 5;
+                    continue;
+                }
+                var token = tokens[tokenIndex];
+                var currentTag = Tags.FirstOrDefault(tag => tag.TagValue == token);
+
+                if (currentTag == null || IsEscaped(renderedTokens))
+                {
+                    renderedTokens.Push(token);
                     continue;
                 }
 
@@ -59,25 +72,35 @@ namespace Markdown
                 }
                 var lastBias = GetLastBias(tags, currentTag);
 
-                if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex - 1) || DisabledByCodeTag(tagValue, insideCode))
+                if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex) || DisabledByCodeTag(tagValue, insideCode))
                 {
-                    stack.Push("\\" + tagValue);
+                    renderedTokens.Push("\\" + tagValue);
                     continue;
                 }
                 if (lastBias != 0)
                     currentTag.Bias = -lastBias;
 
                 tags = UpdateTagsWithCurrentTag(tags, currentTag);
-                if (!stack.Contains(tagValue))
+                if (!renderedTokens.Contains(tagValue))
                 {
-                    stack.Push(tagValue);
+                    renderedTokens.Push(tagValue);
                 }
                 else
                 {
-                    stack = AddRenderedTagBody(stack, currentTag);
+                    renderedTokens = AddRenderedTagBody(renderedTokens, currentTag);
                 }
             }
-            return string.Join("", stack.Reverse());
+            return string.Join("", renderedTokens.Reverse());
+        }
+
+        private static bool IsLink(IReadOnlyList<string> tokens, int tokenIndex)
+        {
+            if (tokenIndex + 6 > tokens.Count)
+                return false;
+            return tokens[tokenIndex] == "["
+                && tokens[tokenIndex + 2] == "]"
+                && tokens[tokenIndex + 3] == "("
+                && tokens[tokenIndex + 5] == ")";
         }
 
         private static Stack<Tag> UpdateTagsWithCurrentTag(Stack<Tag> tags, Tag currentTag)
@@ -104,23 +127,23 @@ namespace Markdown
 
         private static bool IsEscaped(Stack<string> stack)
         {
-            return stack.Count != 0 && Escapes.Contains(stack.Peek());
+            return stack.Count != 0 && stack.Peek() == "\\";
         }
 
-        private static bool IsIncorrectSurrounding(IReadOnlyList<Token> tokens, int bias, int tokenIndex)
+        private static bool IsIncorrectSurrounding(IReadOnlyList<string> tokens, int bias, int tokenIndex)
         {
             if (tokenIndex + bias >= tokens.Count || tokenIndex + bias < 0 || bias == 0)
                 return false;
-            return bias == -1 ? tokens[tokenIndex + bias].TokenValue.EndsWith(" ")
-                : tokens[tokenIndex + bias].TokenValue.StartsWith(" ");
+            return bias == -1 ? tokens[tokenIndex + bias].EndsWith(" ")
+                : tokens[tokenIndex + bias].StartsWith(" ");
         }
 
-        private static int GetLastCodeIndex(IReadOnlyList<Token> tokens)
+        private static int GetLastCodeIndex(IReadOnlyList<string> tokens)
         {
             var lastCodeIndex = -1;
             for (var i = 0; i < tokens.Count; i++)
             {
-                if (tokens[i].TokenValue == "`")
+                if (tokens[i]== "`")
                     lastCodeIndex = i;
             }
             return lastCodeIndex;
@@ -129,7 +152,7 @@ namespace Markdown
         private Stack<string> AddRenderedTagBody(Stack<string> stack, Tag tag)
         {
             var tokens = GetTagTokensList(stack, tag.TagValue);
-            stack.Push(renderer.Render(tokens, tag, tag.DigitsNotAllowed));
+            stack.Push(renderer.RenderTag(tokens, tag));
             return stack;
         }
 
@@ -147,13 +170,10 @@ namespace Markdown
 
         public string Unescape(string text)
         {
+            // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var tagName in TagNames)
             {
-                // ReSharper disable once LoopCanBeConvertedToQuery
-                foreach (var escapeSymbol in Escapes)
-                {
-                    text = text.Replace(escapeSymbol + tagName, tagName);
-                }
+                text = text.Replace("\\" + tagName, tagName);
             }
             return text;
         }

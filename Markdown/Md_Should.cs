@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
 using NUnit.Framework;
 
@@ -7,7 +8,14 @@ namespace Markdown
     [TestFixture]
     public class Md_Should
     {
-        private readonly Md mdProcessor = new Md();
+        private Md mdProcessor;
+
+        [SetUp]
+        public void SetUp()
+        {
+            mdProcessor = new Md();
+        }
+
 
         [TestCase("This is [an example](http://example.com/) inline link.",
             ExpectedResult = "<p>This is <a href=\"http://example.com/\">an example</a> inline link.</p>")]

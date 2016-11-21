@@ -15,16 +15,11 @@ namespace Markdown
         };
 
         private static readonly List<string> TagNames = Tags.Select(tag => tag.TagValue).ToList();
+        private bool insideCode;
+        private int lastCodeIndex;
+        private Stack<Tag> tags;
 
-        public Md()
-        {
-            renderer = new HtmlRenderer();
-            var escapeAndBrackets = new[] {"\\", "[", "]", "(", ")"};
-            var tagNamesAndEscapeAndBrackets = TagNames.Concat(escapeAndBrackets);
-            tokenizer = new Tokenizer(tagNamesAndEscapeAndBrackets.ToArray());
-        }
-
-        public Md(string baseUrl)
+        public Md(string baseUrl = "")
         {
             renderer = new HtmlRenderer(baseUrl);
             var escapeAndBrackets = new[] { "\\", "[", "]", "(", ")" };
@@ -44,10 +39,9 @@ namespace Markdown
         private string RenderTokens(List<string> tokens)
         {
             var renderedTokens = new Stack<string>();
-            var tags = new Stack<Tag>();
+            tags = new Stack<Tag>();
             var tokensLength = tokens.Count;
-            var lastCodeIndex = GetLastCodeIndex(tokens);
-            var insideCode = false;
+            lastCodeIndex = GetLastCodeIndex(tokens);
             for (var tokenIndex = 0; tokenIndex < tokensLength; tokenIndex++)
             {
                 if (IsLink(tokens, tokenIndex))
@@ -55,42 +49,46 @@ namespace Markdown
                     renderedTokens.Push(renderer.RenderLink(tokens, tokenIndex));
                     tokenIndex += 5;
                     continue;
-                }
-                var token = tokens[tokenIndex];
-                var currentTag = Tags.FirstOrDefault(tag => tag.TagValue == token);
-
-                if (currentTag == null || IsEscaped(renderedTokens))
-                {
-                    renderedTokens.Push(token);
-                    continue;
-                }
-
-                var tagValue = currentTag.TagValue;
-                if (tagValue == "`")
-                {
-                    insideCode = !insideCode && (tokenIndex < lastCodeIndex);
-                }
-                var lastBias = GetLastBias(tags, currentTag);
-
-                if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex) || DisabledByCodeTag(tagValue, insideCode))
-                {
-                    renderedTokens.Push("\\" + tagValue);
-                    continue;
-                }
-                if (lastBias != 0)
-                    currentTag.Bias = -lastBias;
-
-                tags = UpdateTagsWithCurrentTag(tags, currentTag);
-                if (!renderedTokens.Contains(tagValue))
-                {
-                    renderedTokens.Push(tagValue);
-                }
-                else
-                {
-                    renderedTokens = AddRenderedTagBody(renderedTokens, currentTag);
-                }
+                } 
+                var renderedToken = GetRenderedTokenOfTag(tokens, renderedTokens, tokenIndex);
+                renderedTokens.Push(renderedToken);
             }
+            insideCode = false;
+            lastCodeIndex = -1;
             return string.Join("", renderedTokens.Reverse());
+        }
+
+        private string GetRenderedTokenOfTag(IReadOnlyList<string> tokens, Stack<string> renderedTokens, int tokenIndex)
+        {
+            var token = tokens[tokenIndex];
+            var currentTag = Tags.FirstOrDefault(tag => tag.TagValue == token);
+
+            if (currentTag == null || IsEscaped(renderedTokens))
+            {
+                return token;
+            }
+
+            var tagValue = currentTag.TagValue;
+            if (tagValue == "`")
+            {
+                insideCode = !insideCode && (tokenIndex < lastCodeIndex);
+            }
+            var lastBias = GetLastBias(tags, currentTag);
+
+            if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex) || DisabledByCodeTag(tagValue))
+            {
+               return "\\" + tagValue;
+            }
+            if (lastBias != 0)
+                currentTag.Bias = -lastBias;
+
+            tags = UpdateTagsWithCurrentTag(tags, currentTag);
+            if (!renderedTokens.Contains(tagValue))
+            {
+                return tagValue;
+            }
+            var tagBody = GetTagTokensList(renderedTokens, currentTag.TagValue);
+            return renderer.RenderTag(tagBody, currentTag);
         }
 
         private static bool IsLink(IReadOnlyList<string> tokens, int tokenIndex)
@@ -120,7 +118,7 @@ namespace Markdown
             return lastTag.TagValue != currentTag.TagValue ? 0 : lastTag.Bias;
         }
 
-        private static bool DisabledByCodeTag(string tagValue, bool insideCode)
+        private bool DisabledByCodeTag(string tagValue)
         {
             return tagValue != "`" && insideCode;
         }
@@ -147,13 +145,6 @@ namespace Markdown
                     lastCodeIndex = i;
             }
             return lastCodeIndex;
-        }
-        
-        private Stack<string> AddRenderedTagBody(Stack<string> stack, Tag tag)
-        {
-            var tokens = GetTagTokensList(stack, tag.TagValue);
-            stack.Push(renderer.RenderTag(tokens, tag));
-            return stack;
         }
 
         public List<string> GetTagTokensList(Stack<string> stack, string tagName)

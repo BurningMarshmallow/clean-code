@@ -7,10 +7,6 @@ namespace Markdown
     {
         private static string _baseUrl;
 
-        public HtmlRenderer()
-        {
-        }
-
         public HtmlRenderer(string baseUrl)
         {
             _baseUrl = baseUrl;
@@ -35,9 +31,12 @@ namespace Markdown
 
         public string RenderLink(List<string> tokens, int tokenIndex)
         {
+            // В Markdown ссылка состоит из 6 токенов:
+            // [ LinkText ] ( URL )
+            // 0     1    2 3  4  5
             var linkText = tokens[tokenIndex + 1];
             var url = tokens[tokenIndex + 4];
-            var isAbsoluteUrl = url.StartsWith("http");
+            var isAbsoluteUrl = url.StartsWith("http") || url.StartsWith("www");
             return isAbsoluteUrl ? $"<a href=\"{url}\">{linkText}</a>" : $"<a href=\"{_baseUrl}{url}\">{linkText}</a>";
         }
 

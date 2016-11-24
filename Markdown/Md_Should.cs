@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using NUnit.Framework;
 
@@ -16,11 +15,36 @@ namespace Markdown
             mdProcessor = new Md();
         }
 
+        [TestCase("__content__", ExpectedResult = "<p><strong style=\"test\">content</strong></p>", TestName = "Strong tags with style")]
+        [TestCase("_markdown_", ExpectedResult = "<p><em style=\"test\">markdown</em></p>", TestName = "Em tags with style")]
+        public string ParseUnderscores_ToTagsWithStyle(string text)
+        {
+            var mdProcessorWithStyle = new Md("", "test");
+            var rendered = mdProcessorWithStyle.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("`stub`", ExpectedResult = "<p><code style=\"test\">stub</code></p>", TestName = "Code tags with style")]
+        public string ParseBackticks_ToCodeTagsWithStyle(string text)
+        {
+            var mdProcessorWithStyle = new Md("", "test");
+            var rendered = mdProcessorWithStyle.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("[Yandex](http://ya.ru/) link.",
+            ExpectedResult = "<p><a href=\"http://ya.ru/\" style=\"search\">Yandex</a> link.</p>", TestName = "Link after some text")]
+        public string ParseLink_AsHrefWithStyle(string text)
+        {
+            var mdProcessorWithStyle = new Md("", "search");
+            var rendered = mdProcessorWithStyle.RenderToHtml(text);
+            return rendered;
+        }
 
         [TestCase("This is [an example](http://example.com/) inline link.",
-            ExpectedResult = "<p>This is <a href=\"http://example.com/\">an example</a> inline link.</p>")]
+            ExpectedResult = "<p>This is <a href=\"http://example.com/\">an example</a> inline link.</p>", TestName = "Link after some text")]
         [TestCase("[Google](http://google.com/)",
-            ExpectedResult = "<p><a href=\"http://google.com/\">Google</a></p>")]
+            ExpectedResult = "<p><a href=\"http://google.com/\">Google</a></p>", TestName = "Just link")]
         public string ParseLink_AsHref(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
@@ -28,9 +52,9 @@ namespace Markdown
         }
 
         [TestCase("[Random text](/random/189888abc) seems quite interesting!",
-         ExpectedResult = "<p><a href=\"http://example.com/random/189888abc\">Random text</a> seems quite interesting!</p>")]
+         ExpectedResult = "<p><a href=\"http://example.com/random/189888abc\">Random text</a> seems quite interesting!</p>", TestName = "Relative link at the beginning")]
         [TestCase("See my [About](/about/) page for details.",
-         ExpectedResult = "<p>See my <a href=\"http://example.com/about/\">About</a> page for details.</p>")]
+         ExpectedResult = "<p>See my <a href=\"http://example.com/about/\">About</a> page for details.</p>", TestName = "Relative link at the middle")]
         public string ParseRelativeLink_AsHref(string text)
         {
             var mdProcessorWithBaseUrl = new Md("http://example.com");
@@ -46,55 +70,55 @@ namespace Markdown
             return rendered;
         }
 
-        [TestCase("first_info_second", ExpectedResult = "<p>first<em>info</em>second</p>")]
-        [TestCase("_WWW_", ExpectedResult = "<p><em>WWW</em></p>")]
+        [TestCase("first_info_second", ExpectedResult = "<p>first<em>info</em>second</p>", TestName = "Em tags in the middle")]
+        [TestCase("_WWW_", ExpectedResult = "<p><em>WWW</em></p>", TestName = "Just em tags")]
         public string ParseSingleUnderscores_ToEmTags(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
 
-        [TestCase("why__ooooo__why", ExpectedResult = "<p>why<strong>ooooo</strong>why</p>")]
-        [TestCase("__ABBA__", ExpectedResult = "<p><strong>ABBA</strong></p>")]
+        [TestCase("why__ooooo__why", ExpectedResult = "<p>why<strong>ooooo</strong>why</p>", TestName = "Strong tags in the middle")]
+        [TestCase("__ABBA__", ExpectedResult = "<p><strong>ABBA</strong></p>", TestName = "Just strong tags")]
         public string ParseDoubleUnderscores_ToStrongTags(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
 
-        [TestCase("`CODE`", ExpectedResult = "<p><code>CODE</code></p>")]
+        [TestCase("`CODE`", ExpectedResult = "<p><code>CODE</code></p>", TestName = "Just code tags")]
         public string ParseSingleQuotes_ToCodeTags(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
 
-        [TestCase(@"\_shiEld\_", ExpectedResult = "<p>_shiEld_</p>")]
-        [TestCase(@"\_\_rapapa\_\_", ExpectedResult = "<p>__rapapa__</p>")]
-        [TestCase(@"\`apapa\`", ExpectedResult = "<p>`apapa`</p>")]
+        [TestCase(@"\_shiEld\_", ExpectedResult = "<p>_shiEld_</p>", TestName = "Escape single underscores")]
+        [TestCase(@"\_\_rapapa\_\_", ExpectedResult = "<p>__rapapa__</p>", TestName = "Escape double underscores")]
+        [TestCase(@"\`apapa\`", ExpectedResult = "<p>`apapa`</p>", TestName = "Escape code tags")]
         public string ParseEscapedTags_AsSimpleText(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
 
-        [TestCase("abc__def__ghij_KEK_lmnopq", ExpectedResult = "<p>abc<strong>def</strong>ghij<em>KEK</em>lmnopq</p>")]
-        [TestCase("__xx__and_yy_", ExpectedResult = "<p><strong>xx</strong>and<em>yy</em></p>")]
+        [TestCase("__def__ghij_K_lm", ExpectedResult = "<p><strong>def</strong>ghij<em>K</em>lm</p>", TestName = "Single underscores after double underscores")]
+        [TestCase("_xx_and__yy__cc", ExpectedResult = "<p><em>xx</em>and<strong>yy</strong>cc</p>", TestName = "Double underscores after single underscores")]
         public string ParseMultipleConsequentTags_OneByOne(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
 
-        [TestCase("__text_", ExpectedResult = "<p>__text_</p>")]
-        [TestCase("_anothertext__", ExpectedResult = "<p>_anothertext__</p>")]
+        [TestCase("__text_", ExpectedResult = "<p>__text_</p>", TestName = "Single underscore after double underscore")]
+        [TestCase("_anothertext__", ExpectedResult = "<p>_anothertext__</p>", TestName = "Double underscore after single underscore")]
         public string ParseUnpairedTags_AsSimpleText(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
+
         [TestCase("`_inactive_`", ExpectedResult = "<p><code>_inactive_</code></p>")]
-        [TestCase("`it is_passive_word`", ExpectedResult = "<p><code>it is_passive_word</code></p>")]
         public string ParseSingleUnderscoresInsideCode_AsJustCode(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
@@ -103,7 +127,7 @@ namespace Markdown
 
         [TestCase("some_text_`", ExpectedResult = "<p>some<em>text</em>`</p>")]
         [TestCase("`before_inside_", ExpectedResult = "<p>`before<em>inside</em></p>")]
-        public string ParseSingleUnderscoresInsideUnpairedCode_AsStrong(string text)
+        public string ParseSingleUnderscoresInsideUnpairedCode_AsEm(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
@@ -153,7 +177,7 @@ namespace Markdown
 
             var factor = secondLen / firstLen;
 
-            Assert.IsTrue(secondTime / firstTime <= 8 * factor);
+            Assert.IsTrue(secondTime / firstTime <= 9 * factor);
         }
 
         private long GetRenderingTime(string text)
@@ -170,7 +194,7 @@ namespace Markdown
         public void TestPerformanceComparedToActivity(int numberOfTimes)
         {
             var builder = new StringBuilder();
-            var test = "_ABA_ __CCCC__ _D_ _R_";
+            const string test = "_ABA_ __CCCC__ _D_ _R_";
             for (var i = 0; i < numberOfTimes; i++)
                 builder.Append(test);
             var text = builder.ToString();
@@ -178,7 +202,7 @@ namespace Markdown
             var tmp = 0;
             foreach (var symbol in text)
             {
-                for (int i = 0; i < 1000; i++)
+                for (var i = 0; i < 1000; i++)
                     tmp++;
             }
 

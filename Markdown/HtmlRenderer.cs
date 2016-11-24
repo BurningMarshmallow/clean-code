@@ -5,11 +5,13 @@ namespace Markdown
 {
     public class HtmlRenderer
     {
-        private static string _baseUrl;
+        private readonly string baseUrl;
+        private readonly string styleString;
 
-        public HtmlRenderer(string baseUrl)
+        public HtmlRenderer(string baseUrl, string style)
         {
-            _baseUrl = baseUrl;
+            this.baseUrl = baseUrl;
+            styleString = style == null ? "" : $@" style=""{style}""";
         }
 
         public string RenderLessOrGreater(string input)
@@ -24,7 +26,7 @@ namespace Markdown
             var tagName = tag.TagRepresentation;
             if (tag.DigitsNotAllowed && IsOnlyDigitsInBody(input))
                 return string.Join("", input);
-            input[0] = $"<{tagName}>";
+            input[0] = $"<{tagName}{styleString}>";
             input[input.Count - 1] = $"</{tagName}>";
             return string.Join("", input);
         }
@@ -37,7 +39,8 @@ namespace Markdown
             var linkText = tokens[tokenIndex + 1];
             var url = tokens[tokenIndex + 4];
             var isAbsoluteUrl = url.StartsWith("http") || url.StartsWith("www");
-            return isAbsoluteUrl ? $"<a href=\"{url}\">{linkText}</a>" : $"<a href=\"{_baseUrl}{url}\">{linkText}</a>";
+            return isAbsoluteUrl ? $"<a href=\"{url}\"{styleString}>{linkText}</a>" 
+                : $"<a href=\"{baseUrl}{url}\"{styleString}>{linkText}</a>";
         }
 
         public bool IsOnlyDigitsInBody(List<string> input)

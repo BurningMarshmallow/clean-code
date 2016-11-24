@@ -15,6 +15,31 @@ namespace Markdown
             mdProcessor = new Md();
         }
 
+        [TestCase("abc\r\ndef", ExpectedResult = "<p>abc</p>\r\n<p>def</p>", TestName = "Two consequent lines")]
+        public string ParseMultiplesLines_AsDifferentParagraps(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("a\r\n\r\nb", ExpectedResult = "<p>a</p>\r\n<p>b</p>", TestName = "Two lines separated by two empty lines")]
+        [TestCase("a\r\n\r\n\r\nb", ExpectedResult = "<p>a</p>\r\n<p>b</p>", TestName = "Two lines separated by three empty lines")]
+        public string SkipMultipleEmptyLines(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("_f_\r\n_e_", ExpectedResult = "<p><em>f</em></p>\r\n<p><em>e</em></p>", TestName = "Single underscores in first line and single underscores in second")]
+        [TestCase("__x__\r\n__y__", ExpectedResult = "<p><strong>x</strong></p>\r\n<p><strong>y</strong></p>", TestName = "Double underscores in first line and double underscores in second")]
+        [TestCase("_mark_\r\n__down__", ExpectedResult = "<p><em>mark</em></p>\r\n<p><strong>down</strong></p>", TestName = "Single underscores in first line and double underscores in second")]
+        [TestCase("__down__\r\n_mark_", ExpectedResult = "<p><strong>down</strong></p>\r\n<p><em>mark</em></p>", TestName = "Double underscores in first line and single underscores in second")]
+        public string ParseUnderscoresInMultipleLines_AsExpected(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
         [TestCase("__content__", ExpectedResult = "<p><strong style=\"test\">content</strong></p>", TestName = "Strong tags with style")]
         [TestCase("_markdown_", ExpectedResult = "<p><em style=\"test\">markdown</em></p>", TestName = "Em tags with style")]
         public string ParseUnderscores_ToTagsWithStyle(string text)
@@ -45,7 +70,7 @@ namespace Markdown
             ExpectedResult = "<p>This is <a href=\"http://example.com/\">an example</a> inline link.</p>", TestName = "Link after some text")]
         [TestCase("[Google](http://google.com/)",
             ExpectedResult = "<p><a href=\"http://google.com/\">Google</a></p>", TestName = "Just link")]
-        public string ParseLink_AsHref(string text)
+        public string ParseAbsoluteLink_AsHref(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Markdown
@@ -29,13 +30,25 @@ namespace Markdown
 
         public string RenderToHtml(string markdown)
         {
-            var result = renderer.RenderLessOrGreater(markdown);
+            var paragraphs = markdown.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var renderedParagraphs = paragraphs.Select(RenderParagraph).ToList();
+            return JoinParagraphs(renderedParagraphs);
+        }
+
+        public string JoinParagraphs(List<string> paragraphs)
+        {
+            return string.Join(Environment.NewLine, paragraphs);
+        }
+
+        public string RenderParagraph(string paragraph)
+        {
+            var result = renderer.RenderLessOrGreater(paragraph);
             var tokens = tokenizer.GetTokens(result);
             var renderedTokens = RenderTokens(tokens);
             var unescaped = Unescape(renderedTokens);
             return $"<p>{unescaped}</p>";
         }
-
+        
         private string RenderTokens(List<string> tokens)
         {
             var renderedTokens = new Stack<string>();

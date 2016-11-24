@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+// ReSharper disable InconsistentNaming
 
 namespace Markdown
 {
@@ -8,14 +9,14 @@ namespace Markdown
     {
         private readonly HtmlRenderer renderer;
         private readonly Tokenizer tokenizer;
-        private static readonly List<Tag> Tags = new List<Tag>
+        private static readonly List<Tag> tags = new List<Tag>
         {
             new Tag("__", "strong"),
             new Tag("_", "em"),
             new Tag("`", "code", 0, false)
         };
 
-        private static readonly List<string> Headers = new List<string>
+        private static readonly List<string> headers = new List<string>
         {
             "######",
             "#####",
@@ -25,10 +26,10 @@ namespace Markdown
             "#"
         };
 
-        private static readonly List<string> TagNames = Tags.Select(tag => tag.TagValue).ToList();
+        private static readonly List<string> TagNames = tags.Select(tag => tag.TagValue).ToList();
         private bool insideCode;
         private int lastCodeIndex;
-        private Stack<Tag> tags;
+        private Stack<Tag> unrenderedTags;
 
         public Md(string baseUrl = "", string style = null)
         {
@@ -45,18 +46,18 @@ namespace Markdown
             return JoinParagraphs(renderedParagraphs);
         }
 
-        public string JoinParagraphs(List<string> paragraphs)
+        private static string JoinParagraphs(IEnumerable<string> paragraphs)
         {
             return string.Join(Environment.NewLine, paragraphs);
         }
 
-        public string RenderParagraph(string paragraph)
+        private string RenderParagraph(string paragraph)
         {
             var result = renderer.RenderLessOrGreater(paragraph);
             var tokens = tokenizer.GetTokens(result);
             var renderedTokens = RenderTokens(tokens);
             var unescaped = Unescape(renderedTokens);
-            foreach (var header in Headers)
+            foreach (var header in headers)
             {
                 if (!unescaped.StartsWith(header))
                     continue;
@@ -69,7 +70,7 @@ namespace Markdown
         private string RenderTokens(List<string> tokens)
         {
             var renderedTokens = new Stack<string>();
-            tags = new Stack<Tag>();
+            unrenderedTags = new Stack<Tag>();
             var tokensLength = tokens.Count;
             lastCodeIndex = GetLastCodeIndex(tokens);
             for (var tokenIndex = 0; tokenIndex < tokensLength; tokenIndex++)
@@ -91,7 +92,7 @@ namespace Markdown
         private string GetRenderedTokenOfTag(IReadOnlyList<string> tokens, Stack<string> renderedTokens, int tokenIndex)
         {
             var token = tokens[tokenIndex];
-            var currentTag = Tags.FirstOrDefault(tag => tag.TagValue == token);
+            var currentTag = tags.FirstOrDefault(tag => tag.TagValue == token);
 
             if (currentTag == null || IsEscaped(renderedTokens))
             {
@@ -103,7 +104,7 @@ namespace Markdown
             {
                 insideCode = !insideCode && (tokenIndex < lastCodeIndex);
             }
-            var lastBias = GetLastBias(tags, currentTag);
+            var lastBias = GetLastBias(unrenderedTags, currentTag);
 
             if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex) || DisabledByCodeTag(tagValue))
             {
@@ -112,7 +113,7 @@ namespace Markdown
             if (lastBias != 0)
                 currentTag.Bias = -lastBias;
 
-            tags = UpdateTagsWithCurrentTag(tags, currentTag);
+            unrenderedTags = UpdateTagsWithCurrentTag(unrenderedTags, currentTag);
             if (!renderedTokens.Contains(tagValue))
             {
                 return tagValue;
@@ -177,7 +178,7 @@ namespace Markdown
             return lastCodeIndex;
         }
 
-        public List<string> GetTagTokensList(Stack<string> stack, string tagName)
+        private static List<string> GetTagTokensList(Stack<string> stack, string tagName)
         {
             var tokens = new List<string> { tagName };
             while (stack.Peek() != tagName)
@@ -189,7 +190,7 @@ namespace Markdown
             return tokens;
         }
 
-        public string Unescape(string text)
+        private static string Unescape(string text)
         {
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var tagName in TagNames)

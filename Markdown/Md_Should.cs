@@ -24,6 +24,22 @@ namespace Markdown
             return rendered;
         }
 
+        [TestCase("#######red", ExpectedResult = "<p><h6>#red</h6></p>", TestName = "Seven sharps")]
+        [TestCase("#############green", ExpectedResult = "<p><h6>#######green</h6></p>", TestName = "Thirteen sharps")]
+        public string ParseOnlyNotMoreThanFirstSixSharps_AsHeader(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("ab###c", ExpectedResult = "<p>ab###c</p>", TestName = "In the middle")]
+        [TestCase("Unexpected####", ExpectedResult = "<p>Unexpected####</p>", TestName = "In the end")]
+        public string ParseSharpsSignsNotAtTheBeginning_AsSharpSigns(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
         [TestCase("abc\r\ndef", ExpectedResult = "<p>abc</p>\r\n<p>def</p>", TestName = "Two consequent lines")]
         public string ParseMultiplesLines_AsDifferentParagraps(string text)
         {
@@ -195,6 +211,7 @@ namespace Markdown
             return rendered;
         }
 
+        [Explicit]
         [TestCase(100, 500)]
         [TestCase(39, 120)]
         [TestCase(50, 600)]
@@ -223,6 +240,7 @@ namespace Markdown
             return watch.ElapsedMilliseconds;
         }
 
+        [Explicit]
         [TestCase(3000)]
         [TestCase(4000)]
         public void TestPerformanceComparedToActivity(int numberOfTimes)

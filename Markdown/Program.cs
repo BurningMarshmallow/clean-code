@@ -1,16 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace Markdown
 {
 	class Program
 	{
-		static void Main(string[] args)
+	    private static void Main(string[] args)
 		{
-		}
-	}
+            var inputFilename = args[0];
+            var outputFilename = args[1];
+            var content = File.ReadAllText(inputFilename);
+            var mdProcessor = new Md();
+            var renderedContent = mdProcessor.RenderToHtml(content);
+            File.WriteAllText(outputFilename, CreateHtmlPage(renderedContent));
+        }
+
+        public static string CreateHtmlPage(string content)
+        {
+            return "<!DOCTYPE html>\n" +
+                   "<html>\n" +
+                   "<head>\n" +
+                   "    <meta charset='utf-8'>\n" +
+                   "</head>\n" +
+                   "<body>\n" +
+                   "<p>\n    " +
+                   content +
+                   "\n</p>\n" +
+                   "</body>\n" +
+                   "</html>";
+        }
+    }
 }

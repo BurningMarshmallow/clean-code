@@ -15,6 +15,15 @@ namespace Markdown
             mdProcessor = new Md();
         }
 
+        [TestCase("#a", ExpectedResult = "<p><h1>a</h1></p>", TestName = "One sharp")]
+        [TestCase("######a", ExpectedResult = "<p><h6>a</h6></p>", TestName = "Six sharps")]
+        [TestCase("##a\r\n#a", ExpectedResult = "<p><h2>a</h2></p>\r\n<p><h1>a</h1></p>", TestName = "Headers on different lines")]
+        public string ParseSharpSigns_AsHeaders(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
         [TestCase("abc\r\ndef", ExpectedResult = "<p>abc</p>\r\n<p>def</p>", TestName = "Two consequent lines")]
         public string ParseMultiplesLines_AsDifferentParagraps(string text)
         {

@@ -15,6 +15,16 @@ namespace Markdown
             new Tag("`", "code", 0, false)
         };
 
+        private static readonly List<string> Headers = new List<string>
+        {
+            "######",
+            "#####",
+            "####",
+            "###",
+            "##",
+            "#"
+        };
+
         private static readonly List<string> TagNames = Tags.Select(tag => tag.TagValue).ToList();
         private bool insideCode;
         private int lastCodeIndex;
@@ -46,6 +56,13 @@ namespace Markdown
             var tokens = tokenizer.GetTokens(result);
             var renderedTokens = RenderTokens(tokens);
             var unescaped = Unescape(renderedTokens);
+            foreach (var header in Headers)
+            {
+                if (!unescaped.StartsWith(header))
+                    continue;
+                var headerLen = header.Length;
+                return $"<p><h{headerLen}>{unescaped.Substring(headerLen)}</h{headerLen}></p>";
+            }
             return $"<p>{unescaped}</p>";
         }
         

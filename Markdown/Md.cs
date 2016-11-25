@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 // ReSharper disable InconsistentNaming
 
@@ -16,7 +14,6 @@ namespace Markdown
         {
             new Tag("__", "strong"),
             new Tag("_", "em"),
-            new Tag("`", "code", 0, false)
         };
 
         private static readonly List<string> headers = new List<string>
@@ -29,16 +26,14 @@ namespace Markdown
             "#"
         };
 
-        private static readonly List<string> TagNames = tags.Select(tag => tag.TagValue).ToList();
-        private bool insideCode;
-        private int lastCodeIndex;
+        private static readonly List<string> tagNames = tags.Select(tag => tag.TagValue).ToList();
         private Stack<Tag> unrenderedTags;
 
         public Md(Settings settings)
         {
             renderer = new HtmlRenderer(settings);
             var escapeAndBrackets = new[] { "\\", "[", "]", "(", ")" };
-            var tagNamesAndEscapeAndBrackets = TagNames.Concat(escapeAndBrackets);
+            var tagNamesAndEscapeAndBrackets = tagNames.Concat(escapeAndBrackets);
             tokenizer = new Tokenizer(tagNamesAndEscapeAndBrackets.ToArray());
         }
 
@@ -116,7 +111,7 @@ namespace Markdown
         private static bool TryParseOrderedList(string text, out string parseResult)
         {
             parseResult = null;
-            if (!IsValueOfList(text)) return false;
+            if (!IsListValue(text)) return false;
             parseResult = GetListValue(text);
             return true;
         }
@@ -130,7 +125,7 @@ namespace Markdown
             return $"<li>{text.Substring(currentIndex)}</li>";
         }
 
-        public static bool IsValueOfList(string text)
+        public static bool IsListValue(string text)
         {
             var periodIndex = text.IndexOf(".", StringComparison.Ordinal);
             if (periodIndex == -1)
@@ -204,7 +199,6 @@ namespace Markdown
             var renderedTokens = new Stack<string>();
             unrenderedTags = new Stack<Tag>();
             var tokensLength = tokens.Count;
-            lastCodeIndex = GetLastCodeIndex(tokens);
             for (var tokenIndex = 0; tokenIndex < tokensLength; tokenIndex++)
             {
                 if (IsLink(tokens, tokenIndex))
@@ -216,8 +210,6 @@ namespace Markdown
                 var renderedToken = GetRenderedTokenOfTag(tokens, renderedTokens, tokenIndex);
                 renderedTokens.Push(renderedToken);
             }
-            insideCode = false;
-            lastCodeIndex = -1;
             return string.Join("", renderedTokens.Reverse());
         }
 
@@ -232,13 +224,9 @@ namespace Markdown
             }
 
             var tagValue = currentTag.TagValue;
-            if (tagValue == "`")
-            {
-                insideCode = !insideCode && (tokenIndex < lastCodeIndex);
-            }
             var lastBias = GetLastBias(unrenderedTags, currentTag);
 
-            if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex) || DisabledByCodeTag(tagValue))
+            if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex))
             {
                return "\\" + tagValue;
             }
@@ -281,11 +269,6 @@ namespace Markdown
             return lastTag.TagValue != currentTag.TagValue ? 0 : lastTag.Bias;
         }
 
-        private bool DisabledByCodeTag(string tagValue)
-        {
-            return tagValue != "`" && insideCode;
-        }
-
         private static bool IsEscaped(Stack<string> stack)
         {
             return stack.Count != 0 && stack.Peek() == "\\";
@@ -297,17 +280,6 @@ namespace Markdown
                 return false;
             return bias == -1 ? tokens[tokenIndex + bias].EndsWith(" ")
                 : tokens[tokenIndex + bias].StartsWith(" ");
-        }
-
-        private static int GetLastCodeIndex(IReadOnlyList<string> tokens)
-        {
-            var lastCodeIndex = -1;
-            for (var i = 0; i < tokens.Count; i++)
-            {
-                if (tokens[i]== "`")
-                    lastCodeIndex = i;
-            }
-            return lastCodeIndex;
         }
 
         private static List<string> GetTagTokensList(Stack<string> stack, string tagName)
@@ -325,7 +297,7 @@ namespace Markdown
         private static string Unescape(string text)
         {
             // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var tagName in TagNames)
+            foreach (var tagName in tagNames)
             {
                 text = text.Replace("\\" + tagName, tagName);
             }

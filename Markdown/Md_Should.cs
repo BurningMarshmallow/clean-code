@@ -117,15 +117,6 @@ namespace Markdown
             return rendered;
         }
 
-        [TestCase("`stub`", ExpectedResult = "<p><code style=\"test\">stub</code></p>", TestName = "Code tags with style")]
-        public string ParseBackticks_ToCodeTagsWithStyle(string text)
-        {
-            var settings = new Settings("", "test");
-            var mdProcessorWithStyle = new Md(settings);
-            var rendered = mdProcessorWithStyle.RenderToHtml(text);
-            return rendered;
-        }
-
         [TestCase("[Yandex](http://ya.ru/) link.",
             ExpectedResult = "<p><a href=\"http://ya.ru/\" style=\"search\">Yandex</a> link.</p>", TestName = "Link after some text")]
         public string ParseLink_AsHrefWithStyle(string text)
@@ -182,16 +173,8 @@ namespace Markdown
             return rendered;
         }
 
-        [TestCase("`CODE`", ExpectedResult = "<p><code>CODE</code></p>", TestName = "Just code tags")]
-        public string ParseSingleQuotes_ToCodeTags(string text)
-        {
-            var rendered = mdProcessor.RenderToHtml(text);
-            return rendered;
-        }
-
         [TestCase(@"\_shiEld\_", ExpectedResult = "<p>_shiEld_</p>", TestName = "Escape single underscores")]
         [TestCase(@"\_\_rapapa\_\_", ExpectedResult = "<p>__rapapa__</p>", TestName = "Escape double underscores")]
-        [TestCase(@"\`apapa\`", ExpectedResult = "<p>`apapa`</p>", TestName = "Escape code tags")]
         public string ParseEscapedTags_AsSimpleText(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
@@ -209,38 +192,6 @@ namespace Markdown
         [TestCase("__text_", ExpectedResult = "<p>__text_</p>", TestName = "Single underscore after double underscore")]
         [TestCase("_anothertext__", ExpectedResult = "<p>_anothertext__</p>", TestName = "Double underscore after single underscore")]
         public string ParseUnpairedTags_AsSimpleText(string text)
-        {
-            var rendered = mdProcessor.RenderToHtml(text);
-            return rendered;
-        }
-
-        [TestCase("`_inactive_`", ExpectedResult = "<p><code>_inactive_</code></p>")]
-        public string ParseSingleUnderscoresInsideCode_AsJustCode(string text)
-        {
-            var rendered = mdProcessor.RenderToHtml(text);
-            return rendered;
-        }
-
-        [TestCase("some_text_`", ExpectedResult = "<p>some<em>text</em>`</p>")]
-        [TestCase("`before_inside_", ExpectedResult = "<p>`before<em>inside</em></p>")]
-        public string ParseSingleUnderscoresInsideUnpairedCode_AsEm(string text)
-        {
-            var rendered = mdProcessor.RenderToHtml(text);
-            return rendered;
-        }
-
-
-        [TestCase("`I__am__ inside code`", ExpectedResult = "<p><code>I__am__ inside code</code></p>")]
-        [TestCase("`__inside__`", ExpectedResult = "<p><code>__inside__</code></p>")]
-        public string ParseDoubleUnderscoresInsideCode_AsJustCode(string text)
-        {
-            var rendered = mdProcessor.RenderToHtml(text);
-            return rendered;
-        }
-
-        [TestCase("__test__`abc", ExpectedResult = "<p><strong>test</strong>`abc</p>")]
-        [TestCase("`__inside__", ExpectedResult = "<p>`<strong>inside</strong></p>")]
-        public string ParseDoubleUnderscoresInsideUnpairedCode_AsStrong(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;

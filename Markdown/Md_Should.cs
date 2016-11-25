@@ -15,6 +15,39 @@ namespace Markdown
             mdProcessor = new Md(new Settings());
         }
 
+        [TestCase("1.  Bird\r\n2.  McHale\r\n3.  Parish", ExpectedResult = "<p><ol><li>Bird</li>\r\n<li>McHale</li>\r\n<li>Parish</li></ol></p>")]
+        [TestCase("1.  Single", ExpectedResult = "<p><ol><li>Single</li></ol></p>")]
+        public string ParseOrderedListCorrectly(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase(".       Long time ago", ExpectedResult = "<p>.       Long time ago</p>")]
+        [TestCase(". Space", ExpectedResult = "<p>. Space</p>")]
+        [TestCase(".  ABBA", ExpectedResult = "<p>.  ABBA</p>")]
+        public string ParsePeriodWithSpaces_AsSimpleText(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("1.Cat\r\n2.Dog\r\n3.Cow", ExpectedResult = "<p>1.Cat\r\n2.Dog\r\n3.Cow</p>")]
+        [TestCase("1.David Bowie", ExpectedResult = "<p>1.David Bowie</p>")]
+        public string ParseNumberWithPeriod_AsSimpleText(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
+        [TestCase("2.  Pen\r\n1.  Pineapple", ExpectedResult = "<p><ol><li>Pen</li>\r\n<li>Pineapple</li></ol></p>")]
+        [TestCase("1337.  TestData", ExpectedResult = "<p><ol><li>TestData</li></ol></p>")]
+        public string ParseOrderedListWithIncorrectNumbersCorrectly(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
         [TestCase("    This is a code block.", ExpectedResult = "<p><pre><code>This is a code block.</code></pre></p>")]
  		[TestCase("Here is an example of AppleScript:\r\n\ttell application \"Foo\"\r\n\t\tbeep\r\n\tend tell",
  ExpectedResult = "<p>Here is an example of AppleScript:\r\n<pre><code>tell application \"Foo\"\r\n\tbeep\r\nend tell</code></pre></p>")]
@@ -26,7 +59,7 @@ namespace Markdown
 
     [TestCase("#a", ExpectedResult = "<p><h1>a</h1></p>", TestName = "One sharp")]
         [TestCase("######a", ExpectedResult = "<p><h6>a</h6></p>", TestName = "Six sharps")]
-        [TestCase("##a\r\n#a", ExpectedResult = "<p><h2>a</h2>\r\n<h1>a</h1></p>", TestName = "Headers on different lines")]
+        [TestCase("##a\r\n\r\n#a", ExpectedResult = "<p><h2>a</h2></p>\r\n\r\n<p><h1>a</h1></p>", TestName = "Headers on different lines")]
         public string ParseSharpSigns_AsHeaders(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);

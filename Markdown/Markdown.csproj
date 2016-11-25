@@ -48,6 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HtmlRenderer.cs" />
+    <Compile Include="Line.cs" />
+    <Compile Include="LineType.cs" />
     <Compile Include="Md.cs" />
     <Compile Include="Md_Should.cs" />
     <Compile Include="Program.cs" />

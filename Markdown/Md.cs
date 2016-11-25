@@ -84,38 +84,92 @@ namespace Markdown
         {
             if (paragraphLines.Count == 0)
                 return "";
-            var renderedParagraphLines = new List<string>();
-            var codeBlockLines = new List<string>();
+            var renderedParagraphLines = new List<Line>();
             foreach (var line in paragraphLines)
             {
                 var result = renderer.RenderLessOrGreater(line);
                 string parseResult;
                 if (TryParseCodeBlock(result, out parseResult))
                 {
-                    codeBlockLines.Add(parseResult);
+                    renderedParagraphLines.Add(new Line(parseResult, LineType.CodeBlockLine, "<pre><code>", "</code></pre>"));
                     continue;
                 }
-                if (codeBlockLines.Count > 0)
+                if (TryParseOrderedList(result, out parseResult))
                 {
-                    renderedParagraphLines.Add($"<pre><code>{JoinLines(codeBlockLines)}</code></pre>");
-                    codeBlockLines.Clear();
+                    renderedParagraphLines.Add(new Line(parseResult, LineType.OrderedListLine, "<ol>", "</ol>"));
+                    continue;
                 }
                 var tokens = tokenizer.GetTokens(result);
                 var renderedTokens = RenderTokens(tokens);
                 var unescaped = Unescape(renderedTokens);
                 if (TryParseHeader(unescaped, out parseResult))
                 {
-                    renderedParagraphLines.Add(parseResult);
+                    var headerLength = GetHeaderLength(unescaped);
+                    renderedParagraphLines.Add(new Line(parseResult, LineType.HeaderLine, $"<h{headerLength}>", $"</h{headerLength}>"));
                     continue;
                 }
-                renderedParagraphLines.Add(unescaped);
+                renderedParagraphLines.Add(new Line(unescaped, LineType.BasicLine, "", ""));
             }
-            if (codeBlockLines.Count > 0)
+            return $"<p>{JoinRenderedParagraphsLines(renderedParagraphLines)}</p>";
+        }
+
+        private static bool TryParseOrderedList(string text, out string parseResult)
+        {
+            parseResult = null;
+            if (!IsValueOfList(text)) return false;
+            parseResult = GetListValue(text);
+            return true;
+        }
+
+        private static string GetListValue(string text)
+        {
+            var currentIndex = text.IndexOf(".", StringComparison.Ordinal);
+            currentIndex++;
+            while (text[currentIndex] == ' ')
+                currentIndex++;
+            return $"<li>{text.Substring(currentIndex)}</li>";
+        }
+
+        public static bool IsValueOfList(string text)
+        {
+            var periodIndex = text.IndexOf(".", StringComparison.Ordinal);
+            if (periodIndex == -1)
+                return false;
+            var partBeforeDot = text.Substring(0, periodIndex);
+            if (partBeforeDot == "")
+                return false;
+            var partBeforeDotIsNumber = partBeforeDot.All(char.IsDigit);
+            var periodBeforeSpaces = periodIndex < text.Length - 1 && text[periodIndex + 1] == ' ';
+            return partBeforeDotIsNumber && periodBeforeSpaces;
+        }
+
+        private static int GetHeaderLength(string text)
+        {
+            return headers.Where(text.StartsWith).Select(header => header.Length).FirstOrDefault();
+        }
+
+        private static string JoinRenderedParagraphsLines(IReadOnlyList<Line> renderedParagraphLines)
+        {
+            var numberOfLines = renderedParagraphLines.Count;
+            var previousLineType = LineType.None;
+            var renderedParagraph = new List<string>();
+            for (var lineIndex = 0; lineIndex < numberOfLines; lineIndex++)
             {
-                renderedParagraphLines.Add($"<pre><code>{JoinLines(codeBlockLines)}</code></pre>");
-                codeBlockLines.Clear();
+                var line = renderedParagraphLines[lineIndex];
+                if (line.LineType != previousLineType)
+                {
+                    if (lineIndex > 0)
+                        renderedParagraph[lineIndex - 1] += renderedParagraphLines[lineIndex - 1].LineTypeClosingTag;
+                    renderedParagraph.Add(line.LineTypeOpeningTag + line.LineValue);
+                }
+                else
+                {
+                    renderedParagraph.Add(line.LineValue);
+                }
+                previousLineType = line.LineType;
             }
-            return $"<p>{JoinLines(renderedParagraphLines)}</p>";
+            renderedParagraph[numberOfLines - 1] += renderedParagraphLines[numberOfLines - 1].LineTypeClosingTag;
+            return JoinLines(renderedParagraph);
         }
 
         public bool TryParseCodeBlock(string text, out string parseResult)
@@ -139,7 +193,7 @@ namespace Markdown
                 if (!text.StartsWith(header))
                     continue;
                 var headerLen = header.Length;
-                parseResult = $"<h{headerLen}>{text.Substring(headerLen)}</h{headerLen}>";
+                parseResult = text.Substring(headerLen);
                 return true;
             }
             return false;

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+
 // ReSharper disable InconsistentNaming
 
 namespace Markdown
@@ -41,32 +44,73 @@ namespace Markdown
 
         public string RenderToHtml(string markdown)
         {
-            var paragraphs = markdown.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var lines = markdown.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var paragraphs = BuildParagraphsFromLines(lines);
             var renderedParagraphs = paragraphs.Select(RenderParagraph).ToList();
-            return JoinParagraphs(renderedParagraphs);
+            return JoinLines(renderedParagraphs);
         }
 
-        private static string JoinParagraphs(IEnumerable<string> paragraphs)
+        private static IEnumerable<List<string>> BuildParagraphsFromLines(string[] lines)
         {
-            return string.Join(Environment.NewLine, paragraphs);
+            var paragraph = new List<string>();
+            foreach (var line in lines)
+            {
+                if (line == "")
+                {
+                    if (paragraph.Count > 0)
+                    {
+                        yield return paragraph;
+                        paragraph.Clear();
+                    }
+                    yield return new List<string>();
+                }
+                else
+                {
+                    paragraph.Add(line);
+                }
+            }
+            if (paragraph.Count > 0)
+            {
+                yield return paragraph;
+            }
         }
 
-        private string RenderParagraph(string paragraph)
+        private static string JoinLines(IEnumerable<string> lines)
         {
-            var result = renderer.RenderLessOrGreater(paragraph);
-            var tokens = tokenizer.GetTokens(result);
-            var renderedTokens = RenderTokens(tokens);
-            var unescaped = Unescape(renderedTokens);
+            return string.Join(Environment.NewLine, lines);
+        }
+
+        private string RenderParagraph(List<string> paragraphLines)
+        {
+            if (paragraphLines.Count == 0)
+                return "";
+            var renderedParagraphLines = new List<string>();
+            foreach (var line in paragraphLines)
+            {
+                var result = renderer.RenderLessOrGreater(line);
+                var tokens = tokenizer.GetTokens(result);
+                var renderedTokens = RenderTokens(tokens);
+                var unescaped = Unescape(renderedTokens);
+                string parseResult;
+                renderedParagraphLines.Add(TryParseHeader(unescaped, out parseResult) ? parseResult : unescaped);
+            }
+            return $"<p>{JoinLines(renderedParagraphLines)}</p>";
+        }
+
+        private static bool TryParseHeader(string unescaped, out string parseResult)
+        {
+            parseResult = null;
             foreach (var header in headers)
             {
                 if (!unescaped.StartsWith(header))
                     continue;
                 var headerLen = header.Length;
-                return $"<p><h{headerLen}>{unescaped.Substring(headerLen)}</h{headerLen}></p>";
+                parseResult = $"<h{headerLen}>{unescaped.Substring(headerLen)}</h{headerLen}>";
+                return true;
             }
-            return $"<p>{unescaped}</p>";
+            return false;
         }
-        
+
         private string RenderTokens(List<string> tokens)
         {
             var renderedTokens = new Stack<string>();

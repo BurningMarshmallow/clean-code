@@ -17,7 +17,7 @@ namespace Markdown
 
         [TestCase("#a", ExpectedResult = "<p><h1>a</h1></p>", TestName = "One sharp")]
         [TestCase("######a", ExpectedResult = "<p><h6>a</h6></p>", TestName = "Six sharps")]
-        [TestCase("##a\r\n#a", ExpectedResult = "<p><h2>a</h2></p>\r\n<p><h1>a</h1></p>", TestName = "Headers on different lines")]
+        [TestCase("##a\r\n#a", ExpectedResult = "<p><h2>a</h2>\r\n<h1>a</h1></p>", TestName = "Headers on different lines")]
         public string ParseSharpSigns_AsHeaders(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
@@ -40,25 +40,25 @@ namespace Markdown
             return rendered;
         }
 
-        [TestCase("abc\r\ndef", ExpectedResult = "<p>abc</p>\r\n<p>def</p>", TestName = "Two consequent lines")]
-        public string ParseMultiplesLines_AsDifferentParagraps(string text)
+        [TestCase("abc\r\ndef", ExpectedResult = "<p>abc\r\ndef</p>", TestName = "Two consequent lines")]
+        public string ParseMultipleConsequentLines_AsSingleParagraph(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
 
-        [TestCase("a\r\n\r\nb", ExpectedResult = "<p>a</p>\r\n<p>b</p>", TestName = "Two lines separated by two empty lines")]
-        [TestCase("a\r\n\r\n\r\nb", ExpectedResult = "<p>a</p>\r\n<p>b</p>", TestName = "Two lines separated by three empty lines")]
-        public string SkipMultipleEmptyLines(string text)
+        [TestCase("a\r\n\r\nb", ExpectedResult = "<p>a</p>\r\n\r\n<p>b</p>", TestName = "Two lines separated by two empty lines")]
+        [TestCase("a\r\n\r\n\r\nb", ExpectedResult = "<p>a</p>\r\n\r\n\r\n<p>b</p>", TestName = "Two lines separated by three empty lines")]
+        public string CreateDifferentParagraphs_WhenMultipleEmptyLinesAreBetween(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);
             return rendered;
         }
 
-        [TestCase("_f_\r\n_e_", ExpectedResult = "<p><em>f</em></p>\r\n<p><em>e</em></p>", TestName = "Single underscores in first line and single underscores in second")]
-        [TestCase("__x__\r\n__y__", ExpectedResult = "<p><strong>x</strong></p>\r\n<p><strong>y</strong></p>", TestName = "Double underscores in first line and double underscores in second")]
-        [TestCase("_mark_\r\n__down__", ExpectedResult = "<p><em>mark</em></p>\r\n<p><strong>down</strong></p>", TestName = "Single underscores in first line and double underscores in second")]
-        [TestCase("__down__\r\n_mark_", ExpectedResult = "<p><strong>down</strong></p>\r\n<p><em>mark</em></p>", TestName = "Double underscores in first line and single underscores in second")]
+        [TestCase("_f_\r\n_e_", ExpectedResult = "<p><em>f</em>\r\n<em>e</em></p>", TestName = "Single underscores in first line and single underscores in second")]
+        [TestCase("__x__\r\n__y__", ExpectedResult = "<p><strong>x</strong>\r\n<strong>y</strong></p>", TestName = "Double underscores in first line and double underscores in second")]
+        [TestCase("_mark_\r\n__down__", ExpectedResult = "<p><em>mark</em>\r\n<strong>down</strong></p>", TestName = "Single underscores in first line and double underscores in second")]
+        [TestCase("__down__\r\n_mark_", ExpectedResult = "<p><strong>down</strong>\r\n<em>mark</em></p>", TestName = "Double underscores in first line and single underscores in second")]
         public string ParseUnderscoresInMultipleLines_AsExpected(string text)
         {
             var rendered = mdProcessor.RenderToHtml(text);

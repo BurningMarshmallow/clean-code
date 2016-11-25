@@ -15,7 +15,16 @@ namespace Markdown
             mdProcessor = new Md(new Settings());
         }
 
-        [TestCase("#a", ExpectedResult = "<p><h1>a</h1></p>", TestName = "One sharp")]
+        [TestCase("    This is a code block.", ExpectedResult = "<p><pre><code>This is a code block.</code></pre></p>")]
+ 		[TestCase("Here is an example of AppleScript:\r\n\ttell application \"Foo\"\r\n\t\tbeep\r\n\tend tell",
+ ExpectedResult = "<p>Here is an example of AppleScript:\r\n<pre><code>tell application \"Foo\"\r\n\tbeep\r\nend tell</code></pre></p>")]
+ 		public string ParseCodeBlocksCorrectly(string text)
+		{
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;        
+        }
+
+    [TestCase("#a", ExpectedResult = "<p><h1>a</h1></p>", TestName = "One sharp")]
         [TestCase("######a", ExpectedResult = "<p><h6>a</h6></p>", TestName = "Six sharps")]
         [TestCase("##a\r\n#a", ExpectedResult = "<p><h2>a</h2>\r\n<h1>a</h1></p>", TestName = "Headers on different lines")]
         public string ParseSharpSigns_AsHeaders(string text)

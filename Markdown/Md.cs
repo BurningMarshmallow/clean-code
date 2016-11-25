@@ -50,7 +50,7 @@ namespace Markdown
             return JoinLines(renderedParagraphs);
         }
 
-        private static IEnumerable<List<string>> BuildParagraphsFromLines(string[] lines)
+        private static IEnumerable<List<string>> BuildParagraphsFromLines(IEnumerable<string> lines)
         {
             var paragraph = new List<string>();
             foreach (var line in lines)
@@ -85,27 +85,61 @@ namespace Markdown
             if (paragraphLines.Count == 0)
                 return "";
             var renderedParagraphLines = new List<string>();
+            var codeBlockLines = new List<string>();
             foreach (var line in paragraphLines)
             {
                 var result = renderer.RenderLessOrGreater(line);
+                string parseResult;
+                if (TryParseCodeBlock(result, out parseResult))
+                {
+                    codeBlockLines.Add(parseResult);
+                    continue;
+                }
+                if (codeBlockLines.Count > 0)
+                {
+                    renderedParagraphLines.Add($"<pre><code>{JoinLines(codeBlockLines)}</code></pre>");
+                    codeBlockLines.Clear();
+                }
                 var tokens = tokenizer.GetTokens(result);
                 var renderedTokens = RenderTokens(tokens);
                 var unescaped = Unescape(renderedTokens);
-                string parseResult;
-                renderedParagraphLines.Add(TryParseHeader(unescaped, out parseResult) ? parseResult : unescaped);
+                if (TryParseHeader(unescaped, out parseResult))
+                {
+                    renderedParagraphLines.Add(parseResult);
+                    continue;
+                }
+                renderedParagraphLines.Add(unescaped);
+            }
+            if (codeBlockLines.Count > 0)
+            {
+                renderedParagraphLines.Add($"<pre><code>{JoinLines(codeBlockLines)}</code></pre>");
+                codeBlockLines.Clear();
             }
             return $"<p>{JoinLines(renderedParagraphLines)}</p>";
         }
 
-        private static bool TryParseHeader(string unescaped, out string parseResult)
+        public bool TryParseCodeBlock(string text, out string parseResult)
+        {
+            parseResult = null;
+            if (text.StartsWith("\t"))
+            {
+                parseResult = text.Substring(1);
+                return true;
+            }
+            if (!text.StartsWith("    ")) return false;
+            parseResult = text.Substring(4);
+            return true;
+        }
+
+        private static bool TryParseHeader(string text, out string parseResult)
         {
             parseResult = null;
             foreach (var header in headers)
             {
-                if (!unescaped.StartsWith(header))
+                if (!text.StartsWith(header))
                     continue;
                 var headerLen = header.Length;
-                parseResult = $"<h{headerLen}>{unescaped.Substring(headerLen)}</h{headerLen}>";
+                parseResult = $"<h{headerLen}>{text.Substring(headerLen)}</h{headerLen}>";
                 return true;
             }
             return false;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Markdown
@@ -8,10 +9,13 @@ namespace Markdown
         private readonly string baseUrl;
         private readonly string styleString;
 
-        public HtmlRenderer(string baseUrl, string style)
+        public HtmlRenderer(Settings settings)
         {
-            this.baseUrl = baseUrl;
-            styleString = style == null ? "" : $@" style=""{style}""";
+            if (settings.BaseUrl != null)
+            {
+                baseUrl = settings.BaseUrl;
+            }
+             styleString = settings.Style == null ? "" : $@" style=""{settings.Style}""";
         }
 
         public string RenderLessOrGreater(string input)

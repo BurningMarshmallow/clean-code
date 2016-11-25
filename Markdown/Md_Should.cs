@@ -12,7 +12,7 @@ namespace Markdown
         [SetUp]
         public void SetUp()
         {
-            mdProcessor = new Md();
+            mdProcessor = new Md(new Settings());
         }
 
         [TestCase("#a", ExpectedResult = "<p><h1>a</h1></p>", TestName = "One sharp")]
@@ -69,7 +69,8 @@ namespace Markdown
         [TestCase("_markdown_", ExpectedResult = "<p><em style=\"test\">markdown</em></p>", TestName = "Em tags with style")]
         public string ParseUnderscores_ToTagsWithStyle(string text)
         {
-            var mdProcessorWithStyle = new Md("", "test");
+            var settings = new Settings("", "test");
+            var mdProcessorWithStyle = new Md(settings);
             var rendered = mdProcessorWithStyle.RenderToHtml(text);
             return rendered;
         }
@@ -77,7 +78,8 @@ namespace Markdown
         [TestCase("`stub`", ExpectedResult = "<p><code style=\"test\">stub</code></p>", TestName = "Code tags with style")]
         public string ParseBackticks_ToCodeTagsWithStyle(string text)
         {
-            var mdProcessorWithStyle = new Md("", "test");
+            var settings = new Settings("", "test");
+            var mdProcessorWithStyle = new Md(settings);
             var rendered = mdProcessorWithStyle.RenderToHtml(text);
             return rendered;
         }
@@ -86,7 +88,8 @@ namespace Markdown
             ExpectedResult = "<p><a href=\"http://ya.ru/\" style=\"search\">Yandex</a> link.</p>", TestName = "Link after some text")]
         public string ParseLink_AsHrefWithStyle(string text)
         {
-            var mdProcessorWithStyle = new Md("", "search");
+            var settings = new Settings("", "search");
+            var mdProcessorWithStyle = new Md(settings);
             var rendered = mdProcessorWithStyle.RenderToHtml(text);
             return rendered;
         }
@@ -107,7 +110,8 @@ namespace Markdown
          ExpectedResult = "<p>See my <a href=\"http://example.com/about/\">About</a> page for details.</p>", TestName = "Relative link at the middle")]
         public string ParseRelativeLink_AsHref(string text)
         {
-            var mdProcessorWithBaseUrl = new Md("http://example.com");
+            var settings = new Settings("http://example.com");
+            var mdProcessorWithBaseUrl = new Md(settings);
             var rendered = mdProcessorWithBaseUrl.RenderToHtml(text);
             return rendered;
         }

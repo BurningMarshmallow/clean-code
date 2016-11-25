@@ -34,9 +34,9 @@ namespace Markdown
         private int lastCodeIndex;
         private Stack<Tag> unrenderedTags;
 
-        public Md(string baseUrl = "", string style = null)
+        public Md(Settings settings)
         {
-            renderer = new HtmlRenderer(baseUrl, style);
+            renderer = new HtmlRenderer(settings);
             var escapeAndBrackets = new[] { "\\", "[", "]", "(", ")" };
             var tagNamesAndEscapeAndBrackets = TagNames.Concat(escapeAndBrackets);
             tokenizer = new Tokenizer(tagNamesAndEscapeAndBrackets.ToArray());

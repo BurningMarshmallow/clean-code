@@ -47,11 +47,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BasicLineParser.cs" />
+    <Compile Include="CodeBlockParser.cs" />
+    <Compile Include="HeaderParser.cs" />
     <Compile Include="HtmlRenderer.cs" />
+    <Compile Include="Parser.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="LineType.cs" />
     <Compile Include="Md.cs" />
     <Compile Include="Md_Should.cs" />
+    <Compile Include="OrderedListParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="StringExtensions.cs" />

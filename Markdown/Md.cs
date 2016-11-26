@@ -16,14 +16,12 @@ namespace Markdown
             new Tag("_", "em"),
         };
 
-        private static readonly List<string> headers = new List<string>
+        private static readonly List<Parser> parsers = new List<Parser>
         {
-            "######",
-            "#####",
-            "####",
-            "###",
-            "##",
-            "#"
+            new CodeBlockParser(false),
+            new OrderedListParser(false),
+            new HeaderParser(true),
+            new BasicLineParser(true)
         };
 
         private static readonly List<string> tagNames = tags.Select(tag => tag.TagValue).ToList();
@@ -79,68 +77,30 @@ namespace Markdown
         {
             if (paragraphLines.Count == 0)
                 return "";
-            var renderedParagraphLines = new List<Line>();
-            foreach (var line in paragraphLines)
-            {
-                var result = renderer.RenderLessOrGreater(line);
-                string parseResult;
-                if (TryParseCodeBlock(result, out parseResult))
-                {
-                    renderedParagraphLines.Add(new Line(parseResult, LineType.CodeBlockLine, "<pre><code>", "</code></pre>"));
-                    continue;
-                }
-                if (TryParseOrderedList(result, out parseResult))
-                {
-                    renderedParagraphLines.Add(new Line(parseResult, LineType.OrderedListLine, "<ol>", "</ol>"));
-                    continue;
-                }
-                var tokens = tokenizer.GetTokens(result);
-                var renderedTokens = RenderTokens(tokens);
-                var unescaped = Unescape(renderedTokens);
-                if (TryParseHeader(unescaped, out parseResult))
-                {
-                    var headerLength = GetHeaderLength(unescaped);
-                    renderedParagraphLines.Add(new Line(parseResult, LineType.HeaderLine, $"<h{headerLength}>", $"</h{headerLength}>"));
-                    continue;
-                }
-                renderedParagraphLines.Add(new Line(unescaped, LineType.BasicLine, "", ""));
-            }
+            var renderedParagraphLines = paragraphLines.Select(line => renderer.RenderLessOrGreater(line))
+                                                       .Select(GetParsedLine)
+                                                       .ToList();
             return $"<p>{JoinRenderedParagraphsLines(renderedParagraphLines)}</p>";
         }
 
-        private static bool TryParseOrderedList(string text, out string parseResult)
+        private Line GetParsedLine(string text)
         {
-            parseResult = null;
-            if (!IsListValue(text)) return false;
-            parseResult = GetListValue(text);
-            return true;
-        }
-
-        private static string GetListValue(string text)
-        {
-            var currentIndex = text.IndexOf(".", StringComparison.Ordinal);
-            currentIndex++;
-            while (text[currentIndex] == ' ')
-                currentIndex++;
-            return $"<li>{text.Substring(currentIndex)}</li>";
-        }
-
-        public static bool IsListValue(string text)
-        {
-            var periodIndex = text.IndexOf(".", StringComparison.Ordinal);
-            if (periodIndex == -1)
-                return false;
-            var partBeforeDot = text.Substring(0, periodIndex);
-            if (partBeforeDot == "")
-                return false;
-            var partBeforeDotIsNumber = partBeforeDot.All(char.IsDigit);
-            var periodBeforeSpaces = periodIndex < text.Length - 1 && text[periodIndex + 1] == ' ';
-            return partBeforeDotIsNumber && periodBeforeSpaces;
-        }
-
-        private static int GetHeaderLength(string text)
-        {
-            return headers.Where(text.StartsWith).Select(header => header.Length).FirstOrDefault();
+            foreach (var parser in parsers)
+            {
+                var lineToParse = text;
+                if (parser.MarkdownAllowed)
+                {
+                    var tokens = tokenizer.GetTokens(text);
+                    var renderedTokens = RenderTokens(tokens);
+                    lineToParse = Unescape(renderedTokens);
+                }
+                var parsedResult = parser.ParseLine(lineToParse);
+                if (parsedResult != null)
+                {
+                    return parsedResult;
+                }
+            }
+            return null;
         }
 
         private static string JoinRenderedParagraphsLines(IReadOnlyList<Line> renderedParagraphLines)
@@ -165,33 +125,6 @@ namespace Markdown
             }
             renderedParagraph[numberOfLines - 1] += renderedParagraphLines[numberOfLines - 1].LineTypeClosingTag;
             return JoinLines(renderedParagraph);
-        }
-
-        public bool TryParseCodeBlock(string text, out string parseResult)
-        {
-            parseResult = null;
-            if (text.StartsWith("\t"))
-            {
-                parseResult = text.Substring(1);
-                return true;
-            }
-            if (!text.StartsWith("    ")) return false;
-            parseResult = text.Substring(4);
-            return true;
-        }
-
-        private static bool TryParseHeader(string text, out string parseResult)
-        {
-            parseResult = null;
-            foreach (var header in headers)
-            {
-                if (!text.StartsWith(header))
-                    continue;
-                var headerLen = header.Length;
-                parseResult = text.Substring(headerLen);
-                return true;
-            }
-            return false;
         }
 
         private string RenderTokens(List<string> tokens)

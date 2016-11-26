@@ -2,18 +2,18 @@
 {
     public class Line
     {
-        public readonly LineType LineType;
-        public readonly string LineValue;
-        public readonly string LineTypeOpeningTag;
-        public readonly string LineTypeClosingTag;
+        public readonly LineType Type;
+        public readonly string Value;
+        public readonly string OpeningTag;
+        public readonly string ClosingTag;
 
 
-        public Line(string lineValue, LineType lineType, string lineTypeOpeningTag, string lineTypeClosingTag)
+        public Line(string value, LineType type, string openingTag, string closingTag)
         {
-            LineValue = lineValue;
-            LineType = lineType;
-            LineTypeOpeningTag = lineTypeOpeningTag;
-            LineTypeClosingTag = lineTypeClosingTag;
+            Value = value;
+            Type = type;
+            OpeningTag = openingTag;
+            ClosingTag = closingTag;
         }
     }
 }

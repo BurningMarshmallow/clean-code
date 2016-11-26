@@ -111,19 +111,19 @@ namespace Markdown
             for (var lineIndex = 0; lineIndex < numberOfLines; lineIndex++)
             {
                 var line = renderedParagraphLines[lineIndex];
-                if (line.LineType != previousLineType)
+                if (line.Type != previousLineType)
                 {
                     if (lineIndex > 0)
-                        renderedParagraph[lineIndex - 1] += renderedParagraphLines[lineIndex - 1].LineTypeClosingTag;
-                    renderedParagraph.Add(line.LineTypeOpeningTag + line.LineValue);
+                        renderedParagraph[lineIndex - 1] += renderedParagraphLines[lineIndex - 1].ClosingTag;
+                    renderedParagraph.Add(line.OpeningTag + line.Value);
                 }
                 else
                 {
-                    renderedParagraph.Add(line.LineValue);
+                    renderedParagraph.Add(line.Value);
                 }
-                previousLineType = line.LineType;
+                previousLineType = line.Type;
             }
-            renderedParagraph[numberOfLines - 1] += renderedParagraphLines[numberOfLines - 1].LineTypeClosingTag;
+            renderedParagraph[numberOfLines - 1] += renderedParagraphLines[numberOfLines - 1].ClosingTag;
             return JoinLines(renderedParagraph);
         }
 

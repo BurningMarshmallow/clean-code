@@ -31,15 +31,15 @@ namespace Markdown
             return splitted;
         }
 
-        public int GetNextTokenLength(string text, int position, List<string> splitted)
+        public int GetNextTokenLength(string text, int startPosition, List<string> splitted)
         {
             var token = new StringBuilder();
-            while (position < text.Length)
+            for (var currentPosition = startPosition; currentPosition < text.Length; currentPosition++)
             {
                 var tokenValue = token.ToString();
                 foreach (var delim in tokenizerDelimiters)
                 {
-                    if (text.IsNotSubstringStartingFrom(delim, position))
+                    if (text.IsNotSubstringStartingFrom(delim, currentPosition))
                         continue;
                     if (tokenValue != "")
                     {
@@ -49,8 +49,7 @@ namespace Markdown
                     splitted.Add(delim);
                     return delim.Length;
                 }
-                token.Append(text[position]);
-                position++;
+                token.Append(text[currentPosition]);
             }
             splitted.Add(token.ToString());
             return token.Length;

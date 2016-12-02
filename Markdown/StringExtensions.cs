@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Markdown
@@ -24,5 +25,11 @@ namespace Markdown
             var nextSubstringIsNotSubstr = str.IndexOf(substr, pos, substr.Length, StringComparison.Ordinal) == -1;
             return nextSubstringIsNotSubstr;
         }
+
+        public static string JoinLines(this IEnumerable<string> lines)
+        {
+            return string.Join(Environment.NewLine, lines);
+        }
+
     }
 }

@@ -40,7 +40,7 @@ namespace Markdown
             var lines = markdown.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var paragraphs = BuildParagraphsFromLines(lines);
             var renderedParagraphs = paragraphs.Select(RenderParagraph).ToList();
-            return JoinLines(renderedParagraphs);
+            return renderedParagraphs.JoinLines();
         }
 
         private static IEnumerable<List<string>> BuildParagraphsFromLines(IEnumerable<string> lines)
@@ -66,11 +66,6 @@ namespace Markdown
             {
                 yield return paragraph;
             }
-        }
-
-        private static string JoinLines(IEnumerable<string> lines)
-        {
-            return string.Join(Environment.NewLine, lines);
         }
 
         private string RenderParagraph(List<string> paragraphLines)
@@ -124,7 +119,7 @@ namespace Markdown
                 previousLineType = line.Type;
             }
             renderedParagraph[numberOfLines - 1] += renderedParagraphLines[numberOfLines - 1].ClosingTag;
-            return JoinLines(renderedParagraph);
+            return renderedParagraph.JoinLines();
         }
 
         private string RenderTokens(List<string> tokens)

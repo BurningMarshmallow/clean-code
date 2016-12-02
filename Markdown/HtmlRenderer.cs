@@ -42,9 +42,10 @@ namespace Markdown
             // 0     1    2 3  4  5
             var linkText = tokens[tokenIndex + 1];
             var url = tokens[tokenIndex + 4];
-            var isAbsoluteUrl = url.StartsWith("http") || url.StartsWith("www");
-            return isAbsoluteUrl ? $"<a href=\"{url}\"{styleString}>{linkText}</a>" 
-                : $"<a href=\"{baseUrl}{url}\"{styleString}>{linkText}</a>";
+            var isNotAbsoluteUrl = !Uri.IsWellFormedUriString(url, UriKind.Absolute);
+            if (isNotAbsoluteUrl)
+                url = baseUrl + url;
+            return $"<a href=\"{url}\"{styleString}>{linkText}</a>";
         }
 
         public bool IsOnlyDigitsInBody(List<string> input)

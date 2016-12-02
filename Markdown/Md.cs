@@ -27,9 +27,9 @@ namespace Markdown
         private static readonly List<string> tagNames = tags.Select(tag => tag.TagValue).ToList();
         private Stack<Tag> unrenderedTags;
 
-        public Md(Settings settings)
+        public Md(HtmlRenderer renderer)
         {
-            renderer = new HtmlRenderer(settings);
+            this.renderer = renderer;
             var escapeAndBrackets = new[] { "\\", "[", "]", "(", ")" };
             var tagNamesAndEscapeAndBrackets = tagNames.Concat(escapeAndBrackets);
             tokenizer = new Tokenizer(tagNamesAndEscapeAndBrackets.ToArray());
@@ -77,7 +77,7 @@ namespace Markdown
         {
             if (paragraphLines.Count == 0)
                 return "";
-            var renderedParagraphLines = paragraphLines.Select(line => renderer.RenderLessOrGreater(line))
+            var renderedParagraphLines = paragraphLines.Select(renderer.RenderLessOrGreater)
                                                        .Select(GetParsedLine)
                                                        .ToList();
             return $"<p>{JoinRenderedParagraphsLines(renderedParagraphLines)}</p>";

@@ -3,56 +3,57 @@ using System.Text;
 
 namespace Markdown
 {
-    class Tokenizer
+    public class Tokenizer
     {
-        private readonly string[] delimiters;
+        private readonly string[] tokenizerDelimiters;
 
-        public Tokenizer(string[] delimiters)
+        public Tokenizer(string[] tokenizerDelimiters)
         {
-            this.delimiters = delimiters;
+            this.tokenizerDelimiters = tokenizerDelimiters;
         }
 
         public List<string> GetTokens(string text)
         {
-            var splitted = SplitWithDelimiters(text, delimiters);
+            var splitted = SplitWithDelimiters(text);
             return splitted;
         }
 
-        public List<string> SplitWithDelimiters(string text, string[] delims)
+        private List<string> SplitWithDelimiters(string text)
         {
             var splitted = new List<string>();
             var textLen = text.Length;
             var i = 0;
             while (i < textLen)
             {
-                var token = ReadNextToken(text, delimiters, i, splitted);
-                i += token.Length;
+                var tokenLength = GetNextTokenLength(text, i, splitted);
+                i += tokenLength;
             }
             return splitted;
         }
 
-        public string ReadNextToken(string text, string[] delims, int pos, List<string> splitted)
+        public int GetNextTokenLength(string text, int position, List<string> splitted)
         {
             var token = new StringBuilder();
-            while (pos < text.Length)
+            while (position < text.Length)
             {
-                foreach (var delim in delims)
+                var tokenValue = token.ToString();
+                foreach (var delim in tokenizerDelimiters)
                 {
-                    if (text.IsNotSubstringStartingFrom(delim, pos))
+                    if (text.IsNotSubstringStartingFrom(delim, position))
                         continue;
-                    if (token.ToString() != "")
+                    if (tokenValue != "")
                     {
-                        splitted.Add(token.ToString());
-                        return token.ToString();
+                        splitted.Add(tokenValue);
+                        return tokenValue.Length;
                     }
                     splitted.Add(delim);
-                    return delim;
+                    return delim.Length;
                 }
-                token.Append(text[pos]);
-                pos++;
+                token.Append(text[position]);
+                position++;
             }
             splitted.Add(token.ToString());
-            return token.ToString();
+            return token.Length;
         }
     }
 }

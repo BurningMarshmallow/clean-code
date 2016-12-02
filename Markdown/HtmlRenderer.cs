@@ -9,13 +9,13 @@ namespace Markdown
         private readonly string baseUrl;
         private readonly string styleString;
 
-        public HtmlRenderer(Settings settings)
+        public HtmlRenderer(RendererSettings rendererSettings)
         {
-            if (settings.BaseUrl != null)
+            if (rendererSettings.BaseUrl != null)
             {
-                baseUrl = settings.BaseUrl;
+                baseUrl = rendererSettings.BaseUrl;
             }
-             styleString = settings.Style == null ? "" : $@" style=""{settings.Style}""";
+             styleString = rendererSettings.Style == null ? "" : $@" style=""{rendererSettings.Style}""";
         }
 
         public string RenderLessOrGreater(string input)
@@ -28,7 +28,7 @@ namespace Markdown
         public string RenderTag(List<string> input, Tag tag)
         {
             var tagName = tag.TagRepresentation;
-            if (tag.DigitsNotAllowed && IsOnlyDigitsInBody(input))
+            if (IsOnlyDigitsInBody(input))
                 return string.Join("", input);
             input[0] = $"<{tagName}{styleString}>";
             input[input.Count - 1] = $"</{tagName}>";

@@ -4,14 +4,12 @@
     {
         public string TagValue { get; }
         public string TagRepresentation { get; }
-        public bool DigitsNotAllowed { get; }
         public int Bias;
 
-        public Tag(string tagValue, string tagRepresentation, int bias = 1, bool digitsNotAllowed=true)
+        public Tag(string tagValue, string tagRepresentation, int bias = 1)
         {
             TagValue = tagValue;
             TagRepresentation = tagRepresentation;
-            DigitsNotAllowed = digitsNotAllowed;
             Bias = bias;
         }
     }

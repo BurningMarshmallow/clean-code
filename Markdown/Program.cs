@@ -10,7 +10,9 @@ namespace Markdown
             var inputFilename = args[0];
             var outputFilename = args[1];
             var content = File.ReadAllText(inputFilename);
-            var mdProcessor = new Md(new Settings("", "color:green;"));
+            var rendererSettings = new RendererSettings("", "color:green;");
+            var renderer = new HtmlRenderer(rendererSettings);
+            var mdProcessor = new Md(renderer);
             var renderedContent = mdProcessor.RenderToHtml(content);
             File.WriteAllText(outputFilename, CreateHtmlPage(renderedContent));
         }

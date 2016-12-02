@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace Markdown
 {
@@ -19,7 +20,8 @@ namespace Markdown
             {
                 return true;
             }
-            var nextSubstringIsNotSubstr = str.Substring(pos, substr.Length) != substr;
+
+            var nextSubstringIsNotSubstr = str.IndexOf(substr, pos, substr.Length, StringComparison.Ordinal) == -1;
             return nextSubstringIsNotSubstr;
         }
     }

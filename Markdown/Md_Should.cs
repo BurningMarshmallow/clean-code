@@ -178,7 +178,9 @@ namespace Markdown
             return rendered;
         }
 
-        [TestCase(@"\_shiEld\_", ExpectedResult = "<p>_shiEld_</p>", TestName = "Escape single underscores")]
+        [TestCase(@"\_text_", ExpectedResult = "<p>_text_</p>", TestName = "Escape single underscore from start")]
+        [TestCase(@"_test\_", ExpectedResult = "<p>_test_</p>", TestName = "Escape single underscore from end")]
+        [TestCase(@"\_shiEld\_", ExpectedResult = "<p>_shiEld_</p>", TestName = "Escape single underscores from both sides")]
         [TestCase(@"\_\_rapapa\_\_", ExpectedResult = "<p>__rapapa__</p>", TestName = "Escape double underscores")]
         public string ParseEscapedTags_AsSimpleText(string text)
         {

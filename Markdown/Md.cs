@@ -87,7 +87,7 @@ namespace Markdown
                 {
                     var tokens = tokenizer.GetTokens(text);
                     var renderedTokens = RenderTokens(tokens);
-                    lineToParse = Unescape(renderedTokens);
+                    lineToParse = renderedTokens;
                 }
                 var parsedResult = parser.ParseLine(lineToParse);
                 if (parsedResult != null)
@@ -146,8 +146,14 @@ namespace Markdown
             var token = tokens[tokenIndex];
             var currentTag = tags.FirstOrDefault(tag => tag.TagValue == token);
 
-            if (currentTag == null || IsEscaped(renderedTokens))
+            if (currentTag == null)
             {
+                return token;
+            }
+
+            if (IsEscaped(renderedTokens))
+            {
+                renderedTokens.Pop();
                 return token;
             }
 
@@ -156,18 +162,20 @@ namespace Markdown
 
             if (IsIncorrectSurrounding(tokens, lastBias, tokenIndex))
             {
-               return "\\" + tagValue;
+               return tagValue;
             }
             if (lastBias != 0)
                 currentTag.Bias = -lastBias;
 
-            unrenderedTags = UpdateTagsWithCurrentTag(unrenderedTags, currentTag);
-            if (!renderedTokens.Contains(tagValue))
+            var topTag = unrenderedTags.Count > 0 ? unrenderedTags.Peek() : null;
+            if (topTag != null && topTag.TagValue == currentTag.TagValue)
             {
-                return tagValue;
+                unrenderedTags.Pop();
+                var tagBody = GetTagTokensList(renderedTokens, currentTag.TagValue);
+                return renderer.RenderTag(tagBody, currentTag);
             }
-            var tagBody = GetTagTokensList(renderedTokens, currentTag.TagValue);
-            return renderer.RenderTag(tagBody, currentTag);
+            unrenderedTags.Push(currentTag);
+            return tagValue;
         }
 
         private static bool IsLink(IReadOnlyList<string> tokens, int tokenIndex)
@@ -178,15 +186,6 @@ namespace Markdown
                 && tokens[tokenIndex + 2] == "]"
                 && tokens[tokenIndex + 3] == "("
                 && tokens[tokenIndex + 5] == ")";
-        }
-
-        private static Stack<Tag> UpdateTagsWithCurrentTag(Stack<Tag> tags, Tag currentTag)
-        {
-            if (tags.Count != 0 && tags.Peek().TagValue == currentTag.TagValue)
-                tags.Pop();
-
-            tags.Push(currentTag);
-            return tags;
         }
 
         private static int GetLastBias(Stack<Tag> tags, Tag currentTag)
@@ -220,16 +219,6 @@ namespace Markdown
             tokens.Reverse();
 
             return tokens;
-        }
-
-        private static string Unescape(string text)
-        {
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var tagName in tagNames)
-            {
-                text = text.Replace("\\" + tagName, tagName);
-            }
-            return text;
         }
     }
 }

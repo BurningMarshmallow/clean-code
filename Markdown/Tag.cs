@@ -4,7 +4,7 @@
     {
         public string TagValue { get; }
         public string TagRepresentation { get; }
-        public int Bias;
+        public int Bias { get; set; }
 
         public Tag(string tagValue, string tagRepresentation, int bias = 1)
         {

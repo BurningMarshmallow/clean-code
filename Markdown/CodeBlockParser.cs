@@ -1,6 +1,6 @@
 ﻿namespace Markdown
 {
-    class CodeBlockParser : Parser
+    public class CodeBlockParser : Parser
     {
         public CodeBlockParser(bool markdownAllowed) : base(markdownAllowed)
         {

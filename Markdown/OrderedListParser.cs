@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Markdown
 {
-    class OrderedListParser : Parser
+    public class OrderedListParser : Parser
     {
         public OrderedListParser(bool markdownAllowed) : base(markdownAllowed)
         {

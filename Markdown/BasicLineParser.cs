@@ -1,6 +1,6 @@
 ﻿namespace Markdown
 {
-    class BasicLineParser : Parser
+    public class BasicLineParser : Parser
     {
         public BasicLineParser(bool markdownAllowed) : base(markdownAllowed)
         {

@@ -51,12 +51,9 @@ namespace Markdown
         public bool IsOnlyDigitsInBody(List<string> input)
         {
             var len = input.Count;
-            for (var i = 1; i < len - 1; i++)
-            {
-                if (!input[i].All(char.IsDigit))
-                    return false;
-            }
-            return true;
+            return input.Skip(1)
+                .Take(len - 2)
+                .All(s => s.All(char.IsDigit));
         }
     }
 }

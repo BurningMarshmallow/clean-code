@@ -36,13 +36,13 @@ namespace Markdown
             var token = new StringBuilder();
             for (var currentPosition = startPosition; currentPosition < text.Length; currentPosition++)
             {
-                var tokenValue = token.ToString();
                 foreach (var delim in tokenizerDelimiters)
                 {
                     if (text.IsNotSubstringStartingFrom(delim, currentPosition))
                         continue;
-                    if (tokenValue != "")
+                    if (token.Length > 0)
                     {
+                        var tokenValue = token.ToString();
                         splitted.Add(tokenValue);
                         return tokenValue.Length;
                     }

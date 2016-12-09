@@ -10,10 +10,10 @@ namespace Markdown
     {
         private readonly HtmlRenderer renderer;
         private readonly Tokenizer tokenizer;
-        private static readonly List<Tag> tags = new List<Tag>
+        private static readonly Dictionary<string, Tag> tags = new Dictionary<string, Tag>
         {
-            new Tag("__", "strong"),
-            new Tag("_", "em"),
+            {"__", new Tag("__", "strong")},
+            {"_", new Tag("_", "em")},
         };
 
         private static readonly List<IParser> parsers = new List<IParser>
@@ -23,7 +23,7 @@ namespace Markdown
             new HeaderParser(true)
         };
 
-        private static readonly List<string> tagNames = tags.Select(tag => tag.TagValue).ToList();
+        private static readonly List<string> tagNames = tags.Keys.ToList();
 
         public Md(HtmlRenderer renderer)
         {
@@ -138,12 +138,13 @@ namespace Markdown
         private string GetRenderedTokenOfTag(IReadOnlyList<string> tokens, Stack<string> renderedTokens, int tokenIndex, Stack<Tag> unrenderedTags)
         {
             var token = tokens[tokenIndex];
-            var currentTag = tags.FirstOrDefault(tag => tag.TagValue == token);
-
-            if (currentTag == null)
+            
+            if (!tags.ContainsKey(token))
             {
                 return token;
             }
+
+            var currentTag = tags[token];
 
             if (IsEscaped(renderedTokens))
             {

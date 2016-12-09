@@ -17,6 +17,14 @@ namespace Markdown
             mdProcessor = new Md(renderer);
         }
 
+        [TestCase("1<2", ExpectedResult = "<p>1&lt;2</p>")]
+        [TestCase("first>second", ExpectedResult = "<p>first&gt;second</p>")]
+        public string ParseInequalitySigns_AsAmpersandValues(string text)
+        {
+            var rendered = mdProcessor.RenderToHtml(text);
+            return rendered;
+        }
+
         [TestCase("1.  Bird\r\n2.  McHale\r\n3.  Parish", ExpectedResult = "<p><ol><li>Bird</li>\r\n<li>McHale</li>\r\n<li>Parish</li></ol></p>")]
         [TestCase("1.  Single", ExpectedResult = "<p><ol><li>Single</li></ol></p>")]
         public string ParseOrderedListCorrectly(string text)

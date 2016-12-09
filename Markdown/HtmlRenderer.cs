@@ -20,8 +20,8 @@ namespace Markdown
 
         public string RenderLessOrGreater(string input)
         {
-            input = input.Replace("\\<", "&lt;")
-                         .Replace("\\>", "&gt;");
+            input = input.Replace("<", "&lt;")
+                         .Replace(">", "&gt;");
             return input;
         }
 

@@ -50,7 +50,6 @@
     <Compile Include="CodeBlockParser.cs" />
     <Compile Include="HeaderParser.cs" />
     <Compile Include="HtmlRenderer.cs" />
-    <Compile Include="IIParser.cs" />
     <Compile Include="IParser.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="LineType.cs" />

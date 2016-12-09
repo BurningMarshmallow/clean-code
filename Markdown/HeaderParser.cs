@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-
-namespace Markdown
+﻿namespace Markdown
 {
     public class HeaderParser : IParser
     {
-        private static readonly List<string> headers = new List<string>
-        {
+        private static readonly string[] headers = {
             "######",
             "#####",
             "####",

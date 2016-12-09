@@ -14,24 +14,24 @@ namespace Markdown
 
         public Line ParseLine(string text)
         {
-            if (!IsListValue(text))
+            var periodIndex = text.IndexOf(".", StringComparison.Ordinal);
+            if (!IsListValue(text, periodIndex))
                 return new Line(text, LineType.BasicLine, "", "");
-            var parseResult = GetListValue(text);
+            var parseResult = GetListValue(text, periodIndex);
             return new Line(parseResult, LineType.OrderedListLine, "<ol>", "</ol>");
         }
 
-        private static string GetListValue(string text)
+        private static string GetListValue(string text, int periodIndex)
         {
-            var currentIndex = text.IndexOf(".", StringComparison.Ordinal);
+            var currentIndex = periodIndex;
             currentIndex++;
             while (text[currentIndex] == ' ')
                 currentIndex++;
             return $"<li>{text.Substring(currentIndex)}</li>";
         }
 
-        private static bool IsListValue(string text)
+        private static bool IsListValue(string text, int periodIndex)
         {
-            var periodIndex = text.IndexOf(".", StringComparison.Ordinal);
             if (periodIndex == -1)
                 return false;
             var partBeforeDot = text.Substring(0, periodIndex);

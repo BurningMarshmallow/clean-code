@@ -20,8 +20,7 @@ namespace Markdown
         {
             new CodeBlockParser(false),
             new OrderedListParser(false),
-            new HeaderParser(true),
-            new BasicLineParser(true)
+            new HeaderParser(true)
         };
 
         private static readonly List<string> tagNames = tags.Select(tag => tag.TagValue).ToList();

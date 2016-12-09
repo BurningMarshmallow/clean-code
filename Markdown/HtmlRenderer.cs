@@ -25,13 +25,13 @@ namespace Markdown
             return input;
         }
 
-        public string RenderTag(List<string> input, Tag tag)
+        public string RenderTag(string[] input, Tag tag)
         {
             var tagName = tag.TagRepresentation;
             if (IsOnlyDigitsInBody(input))
                 return string.Join("", input);
             input[0] = $"<{tagName}{styleString}>";
-            input[input.Count - 1] = $"</{tagName}>";
+            input[input.Length - 1] = $"</{tagName}>";
             return string.Join("", input);
         }
 
@@ -48,7 +48,7 @@ namespace Markdown
             return $"<a href=\"{url}\"{styleString}>{linkText}</a>";
         }
 
-        private bool IsOnlyDigitsInBody(List<string> input)
+        private static bool IsOnlyDigitsInBody(IReadOnlyCollection<string> input)
         {
             var len = input.Count;
             return input.Skip(1)

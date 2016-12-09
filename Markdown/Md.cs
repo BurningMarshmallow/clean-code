@@ -24,7 +24,6 @@ namespace Markdown
         };
 
         private static readonly List<string> tagNames = tags.Select(tag => tag.TagValue).ToList();
-        private Stack<Tag> unrenderedTags;
 
         public Md(HtmlRenderer renderer)
         {
@@ -38,7 +37,7 @@ namespace Markdown
         {
             var lines = markdown.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var paragraphs = BuildParagraphsFromLines(lines);
-            var renderedParagraphs = paragraphs.Select(RenderParagraph).ToList();
+            var renderedParagraphs = paragraphs.Select(RenderParagraph);
             return renderedParagraphs.JoinLines();
         }
 
@@ -120,7 +119,7 @@ namespace Markdown
         private string RenderTokens(List<string> tokens)
         {
             var renderedTokens = new Stack<string>();
-            unrenderedTags = new Stack<Tag>();
+            var unrenderedTags = new Stack<Tag>();
             var tokensLength = tokens.Count;
             for (var tokenIndex = 0; tokenIndex < tokensLength; tokenIndex++)
             {
@@ -130,13 +129,13 @@ namespace Markdown
                     tokenIndex += 5;
                     continue;
                 } 
-                var renderedToken = GetRenderedTokenOfTag(tokens, renderedTokens, tokenIndex);
+                var renderedToken = GetRenderedTokenOfTag(tokens, renderedTokens, tokenIndex, unrenderedTags);
                 renderedTokens.Push(renderedToken);
             }
             return string.Join("", renderedTokens.Reverse());
         }
 
-        private string GetRenderedTokenOfTag(IReadOnlyList<string> tokens, Stack<string> renderedTokens, int tokenIndex)
+        private string GetRenderedTokenOfTag(IReadOnlyList<string> tokens, Stack<string> renderedTokens, int tokenIndex, Stack<Tag> unrenderedTags)
         {
             var token = tokens[tokenIndex];
             var currentTag = tags.FirstOrDefault(tag => tag.TagValue == token);
@@ -204,16 +203,16 @@ namespace Markdown
                 : tokens[tokenIndex + bias].StartsWith(" ");
         }
 
-        private static List<string> GetTagTokensList(Stack<string> stack, string tagName)
+        private static string[] GetTagTokensList(Stack<string> renderedTokens, string tagName)
         {
-            var tokens = new List<string> { tagName };
-            while (stack.Peek() != tagName)
-                tokens.Add(stack.Pop());
+            var tokens = new Stack<string>();
+            tokens.Push(tagName);
+            while (renderedTokens.Peek() != tagName)
+                tokens.Push(renderedTokens.Pop());
 
-            tokens.Add(stack.Pop());
-            tokens.Reverse();
+            tokens.Push(renderedTokens.Pop());
 
-            return tokens;
+            return tokens.ToArray();
         }
     }
 }

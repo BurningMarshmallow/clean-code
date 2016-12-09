@@ -1,6 +1,6 @@
 ﻿namespace Markdown
 {
-    public class Line
+    public struct Line
     {
         public readonly LineType Type;
         public readonly string Value;

@@ -80,22 +80,18 @@ namespace Markdown
 
         private Line GetParsedLine(string text)
         {
+            var tokens = tokenizer.GetTokens(text);
+            var renderedTokens = RenderTokens(tokens);
             foreach (var parser in parsers)
             {
-                var lineToParse = text;
-                if (parser.MarkdownAllowed)
-                {
-                    var tokens = tokenizer.GetTokens(text);
-                    var renderedTokens = RenderTokens(tokens);
-                    lineToParse = renderedTokens;
-                }
+                var lineToParse = parser.MarkdownAllowed ? renderedTokens : text;
                 var parsedResult = parser.ParseLine(lineToParse);
-                if (parsedResult != null)
+                if (parsedResult.Type != LineType.BasicLine)
                 {
                     return parsedResult;
                 }
             }
-            return null;
+            return new Line(renderedTokens, LineType.BasicLine, "", "");
         }
 
         private static string JoinRenderedParagraphsLines(IReadOnlyList<Line> renderedParagraphLines)

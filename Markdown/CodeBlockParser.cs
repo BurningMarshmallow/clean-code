@@ -14,7 +14,7 @@
                 parseResult = text.Substring(1);
                 return new Line(parseResult, LineType.CodeBlockLine, "<pre><code>", "</code></pre>");
             }
-            if (!text.StartsWith("    ")) return null;
+            if (!text.StartsWith("    ")) return new Line(text, LineType.BasicLine, "", "");
             parseResult = text.Substring(4);
             return new Line(parseResult, LineType.CodeBlockLine, "<pre><code>", "</code></pre>");
         }

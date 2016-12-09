@@ -12,7 +12,7 @@ namespace Markdown
         public override Line ParseLine(string text)
         {
             if (!IsListValue(text))
-                return null;
+                return new Line(text, LineType.BasicLine, "", "");
             var parseResult = GetListValue(text);
             return new Line(parseResult, LineType.OrderedListLine, "<ol>", "</ol>");
         }

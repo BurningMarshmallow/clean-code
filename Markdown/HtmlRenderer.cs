@@ -48,7 +48,7 @@ namespace Markdown
             return $"<a href=\"{url}\"{styleString}>{linkText}</a>";
         }
 
-        public bool IsOnlyDigitsInBody(List<string> input)
+        private bool IsOnlyDigitsInBody(List<string> input)
         {
             var len = input.Count;
             return input.Skip(1)

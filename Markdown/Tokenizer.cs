@@ -31,7 +31,7 @@ namespace Markdown
             return splitted;
         }
 
-        public int GetNextTokenLength(string text, int startPosition, List<string> splitted)
+        private int GetNextTokenLength(string text, int startPosition, List<string> splitted)
         {
             var token = new StringBuilder();
             for (var currentPosition = startPosition; currentPosition < text.Length; currentPosition++)

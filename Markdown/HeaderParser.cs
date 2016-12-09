@@ -28,7 +28,7 @@ namespace Markdown
                 var parseResult = text.Substring(headerLength);
                 return new Line(parseResult, LineType.HeaderLine, $"<h{headerLength}>", $"</h{headerLength}>");
             }
-            return null;
+            return new Line(text, LineType.BasicLine, "", "");
         }
     }
 }

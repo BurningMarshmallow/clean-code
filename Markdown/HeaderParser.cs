@@ -2,7 +2,7 @@
 
 namespace Markdown
 {
-    public class HeaderParser : Parser
+    public class HeaderParser : IParser
     {
         private static readonly List<string> headers = new List<string>
         {
@@ -14,11 +14,14 @@ namespace Markdown
             "#"
         };
 
-        public HeaderParser(bool markdownAllowed) : base(markdownAllowed)
+        public readonly bool MarkdownAllowed;
+
+        public HeaderParser(bool markdownAllowed)
         {
+            MarkdownAllowed = markdownAllowed;
         }
 
-        public override Line ParseLine(string text)
+        public Line ParseLine(string text)
         {
             foreach (var header in headers)
             {
@@ -29,6 +32,11 @@ namespace Markdown
                 return new Line(parseResult, LineType.HeaderLine, $"<h{headerLength}>", $"</h{headerLength}>");
             }
             return new Line(text, LineType.BasicLine, "", "");
+        }
+
+        public bool IsMarkdownAllowed()
+        {
+            return MarkdownAllowed;
         }
     }
 }

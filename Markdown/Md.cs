@@ -16,7 +16,7 @@ namespace Markdown
             new Tag("_", "em"),
         };
 
-        private static readonly List<Parser> parsers = new List<Parser>
+        private static readonly List<IParser> parsers = new List<IParser>
         {
             new CodeBlockParser(false),
             new OrderedListParser(false),
@@ -83,7 +83,7 @@ namespace Markdown
             var renderedTokens = RenderTokens(tokens);
             foreach (var parser in parsers)
             {
-                var lineToParse = parser.MarkdownAllowed ? renderedTokens : text;
+                var lineToParse = parser.IsMarkdownAllowed() ? renderedTokens : text;
                 var parsedResult = parser.ParseLine(lineToParse);
                 if (parsedResult.Type != LineType.BasicLine)
                 {

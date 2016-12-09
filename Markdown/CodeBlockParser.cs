@@ -1,12 +1,16 @@
 ﻿namespace Markdown
 {
-    public class CodeBlockParser : Parser
+    public class CodeBlockParser : IParser
     {
-        public CodeBlockParser(bool markdownAllowed) : base(markdownAllowed)
+
+        public readonly bool MarkdownAllowed;
+
+        public CodeBlockParser(bool markdownAllowed1)
         {
+            MarkdownAllowed = markdownAllowed1;
         }
 
-        public override Line ParseLine(string text)
+        public Line ParseLine(string text)
         {
             string parseResult;
             if (text.StartsWith("\t"))
@@ -17,6 +21,11 @@
             if (!text.StartsWith("    ")) return new Line(text, LineType.BasicLine, "", "");
             parseResult = text.Substring(4);
             return new Line(parseResult, LineType.CodeBlockLine, "<pre><code>", "</code></pre>");
+        }
+
+        public bool IsMarkdownAllowed()
+        {
+            return MarkdownAllowed;
         }
     }
 }

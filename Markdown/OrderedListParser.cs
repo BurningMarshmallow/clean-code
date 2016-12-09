@@ -3,13 +3,16 @@ using System.Linq;
 
 namespace Markdown
 {
-    public class OrderedListParser : Parser
+    public class OrderedListParser : IParser
     {
-        public OrderedListParser(bool markdownAllowed) : base(markdownAllowed)
+        public readonly bool MarkdownAllowed;
+
+        public OrderedListParser(bool markdownAllowed1)
         {
+            MarkdownAllowed = markdownAllowed1;
         }
 
-        public override Line ParseLine(string text)
+        public Line ParseLine(string text)
         {
             if (!IsListValue(text))
                 return new Line(text, LineType.BasicLine, "", "");
@@ -37,6 +40,11 @@ namespace Markdown
             var partBeforeDotIsNumber = partBeforeDot.All(char.IsDigit);
             var periodBeforeSpaces = periodIndex < text.Length - 1 && text[periodIndex + 1] == ' ';
             return partBeforeDotIsNumber && periodBeforeSpaces;
+        }
+
+        public bool IsMarkdownAllowed()
+        {
+            return MarkdownAllowed;
         }
     }
 }

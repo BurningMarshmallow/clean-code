@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 // ReSharper disable InconsistentNaming
 
@@ -95,25 +96,26 @@ namespace Markdown
         private static string JoinRenderedParagraphsLines(IReadOnlyList<Line> renderedParagraphLines)
         {
             var numberOfLines = renderedParagraphLines.Count;
-            var previousLineType = LineType.None;
-            var renderedParagraph = new List<string>();
-            for (var lineIndex = 0; lineIndex < numberOfLines; lineIndex++)
+            var renderedParagraph = new StringBuilder();
+            renderedParagraph.Append(renderedParagraphLines[0].OpeningTag);
+            for (var lineIndex = 0; lineIndex < numberOfLines - 1; lineIndex++)
             {
                 var line = renderedParagraphLines[lineIndex];
-                if (line.Type != previousLineType)
+                var nextLine = renderedParagraphLines[lineIndex + 1];
+
+                if (line.Type != nextLine.Type)
                 {
-                    if (lineIndex > 0)
-                        renderedParagraph[lineIndex - 1] += renderedParagraphLines[lineIndex - 1].ClosingTag;
-                    renderedParagraph.Add(line.OpeningTag + line.Value);
+                    renderedParagraph.Append(line.Value + line.ClosingTag + Environment.NewLine);
+                    renderedParagraph.Append(nextLine.OpeningTag);
                 }
                 else
                 {
-                    renderedParagraph.Add(line.Value);
+                    renderedParagraph.Append(line.Value + Environment.NewLine);
                 }
-                previousLineType = line.Type;
             }
-            renderedParagraph[numberOfLines - 1] += renderedParagraphLines[numberOfLines - 1].ClosingTag;
-            return renderedParagraph.JoinLines();
+            var lastLine = renderedParagraphLines[numberOfLines - 1];
+            renderedParagraph.Append(lastLine.Value + lastLine.ClosingTag);
+            return renderedParagraph.ToString();
         }
 
         private string RenderTokens(List<string> tokens)

@@ -25,17 +25,18 @@ namespace Markdown
             return input;
         }
 
-        public string RenderTag(string[] input, Tag tag)
+        public RenderResult RenderTag(string[] input, Tag tag)
         {
             var tagName = tag.TagRepresentation;
-            if (IsOnlyDigitsInBody(input))
-                return string.Join("", input);
-            input[0] = $"<{tagName}{styleString}>";
-            input[input.Length - 1] = $"</{tagName}>";
-            return string.Join("", input);
+            if (!IsOnlyDigitsInBody(input))
+            {
+                input[0] = $"<{tagName}{styleString}>";
+                input[input.Length - 1] = $"</{tagName}>";
+            }
+            return new RenderResult(string.Join("", input), 1);
         }
 
-        public string RenderLink(List<string> tokens, int tokenIndex)
+        public RenderResult RenderLink(List<string> tokens, int tokenIndex)
         {
             // В Markdown ссылка состоит из 6 токенов:
             // [ LinkText ] ( URL )
@@ -45,7 +46,7 @@ namespace Markdown
             var isNotAbsoluteUrl = !Uri.IsWellFormedUriString(url, UriKind.Absolute);
             if (isNotAbsoluteUrl)
                 url = baseUrl + url;
-            return $"<a href=\"{url}\"{styleString}>{linkText}</a>";
+            return new RenderResult($"<a href=\"{url}\"{styleString}>{linkText}</a>", 6);
         }
 
         private static bool IsOnlyDigitsInBody(IReadOnlyCollection<string> input)

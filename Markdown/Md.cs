@@ -105,12 +105,12 @@ namespace Markdown
 
                 if (line.Type != nextLine.Type)
                 {
-                    renderedParagraph.Append(line.Value + line.ClosingTag + Environment.NewLine);
+                    renderedParagraph.AppendLine(line.Value + line.ClosingTag);
                     renderedParagraph.Append(nextLine.OpeningTag);
                 }
                 else
                 {
-                    renderedParagraph.Append(line.Value + Environment.NewLine);
+                    renderedParagraph.AppendLine(line.Value);
                 }
             }
             var lastLine = renderedParagraphLines[numberOfLines - 1];
@@ -127,8 +127,9 @@ namespace Markdown
             {
                 if (IsLink(tokens, tokenIndex))
                 {
-                    renderedTokens.Push(renderer.RenderLink(tokens, tokenIndex));
-                    tokenIndex += 5;
+                    var renderResult = renderer.RenderLink(tokens, tokenIndex);
+                    renderedTokens.Push(renderResult.Value);
+                    tokenIndex += renderResult.NumberOfRenderedTokens - 1;
                     continue;
                 } 
                 var renderedToken = GetRenderedTokenOfTag(tokens, renderedTokens, tokenIndex, unrenderedTags);
@@ -169,7 +170,7 @@ namespace Markdown
             {
                 unrenderedTags.Pop();
                 var tagBody = GetTagTokensList(renderedTokens, currentTag.TagValue);
-                return renderer.RenderTag(tagBody, currentTag);
+                return renderer.RenderTag(tagBody, currentTag).Value;
             }
             unrenderedTags.Push(currentTag);
             return tagValue;

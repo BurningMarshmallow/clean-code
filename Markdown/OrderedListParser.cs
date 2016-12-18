@@ -37,9 +37,11 @@ namespace Markdown
             var partBeforeDot = text.Substring(0, periodIndex);
             if (partBeforeDot == "")
                 return false;
-            var partBeforeDotIsNumber = partBeforeDot.All(char.IsDigit);
             var periodBeforeSpaces = periodIndex < text.Length - 1 && text[periodIndex + 1] == ' ';
-            return partBeforeDotIsNumber && periodBeforeSpaces;
+            if (!periodBeforeSpaces)
+                return false;
+            var partBeforeDotIsNumber = partBeforeDot.All(char.IsDigit);
+            return partBeforeDotIsNumber;
         }
 
         public bool IsMarkdownAllowed()
